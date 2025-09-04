@@ -4,8 +4,8 @@ import { TrendingUp, TrendingDown, Activity, Clock, Filter } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cryptoApi, type CoinData, type TrendingCoin } from "@/services/cryptoApi";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { coinGeckoApi, type CoinData, type TrendingCoin } from "@/services/coinGeckoApi";
+import { PriceChart } from "@/components/PriceChart";
 
 const timeframes = [
   { label: "24h", value: "24h", days: 1 },
@@ -17,18 +17,24 @@ export default function Trends() {
   const [coins, setCoins] = useState<CoinData[]>([]);
   const [trending, setTrending] = useState<TrendingCoin[]>([]);
   const [selectedTimeframe, setSelectedTimeframe] = useState("24h");
+  const [selectedCoin, setSelectedCoin] = useState<CoinData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const [coinsData, trendingData] = await Promise.all([
-          cryptoApi.getCoins('usd', 50),
-          cryptoApi.getTrending()
+        // Fetch TOP 10 coins by market cap (as per requirements)
+        const [top10CoinsData, trendingData] = await Promise.all([
+          coinGeckoApi.getTopCoins(10, 'usd'), // Only top 10
+          coinGeckoApi.getTrendingCoins()
         ]);
-        setCoins(coinsData);
+        setCoins(top10CoinsData);
         setTrending(trendingData.coins);
+        // Set first coin as default selection for chart
+        if (top10CoinsData.length > 0 && !selectedCoin) {
+          setSelectedCoin(top10CoinsData[0]);
+        }
       } catch (error) {
         console.error('Error fetching trends data:', error);
       } finally {
@@ -37,7 +43,7 @@ export default function Trends() {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 60000);
+    const interval = setInterval(fetchData, 120000); // 2 minutes to respect rate limits
     return () => clearInterval(interval);
   }, []);
 
@@ -109,29 +115,115 @@ export default function Trends() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              {trending.slice(0, 10).map((coin, index) => (
-                <motion.div
-                  key={coin.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="p-4 rounded-lg bg-background/50 border border-border/30 hover:border-primary/30 transition-all"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline" className="text-xs">
-                      #{index + 1}
-                    </Badge>
-                    <img src={coin.small} alt={coin.name} className="w-6 h-6" />
-                  </div>
-                  <h4 className="font-medium text-sm">{coin.name}</h4>
-                  <p className="text-xs text-muted-foreground uppercase">{coin.symbol}</p>
-                </motion.div>
-              ))}
+            {/* Top 10 Market Cap Coins */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span>Top 10 by Market Cap</span>
+                <Badge className="bg-primary text-primary-foreground">Interactive Charts</Badge>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                {coins.map((coin, index) => (
+                  <motion.div
+                    key={coin.id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    onClick={() => setSelectedCoin(coin)}
+                    className="p-4 rounded-lg bg-background/50 border border-primary/20 hover:border-primary/50 transition-all cursor-pointer hover:scale-105"
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant="default" className="text-xs bg-primary">
+                        Top #{index + 1}
+                      </Badge>
+                      <img src={coin.image} alt={coin.name} className="w-6 h-6" />
+                    </div>
+                    <h4 className="font-medium text-sm">{coin.name}</h4>
+                    <p className="text-xs text-muted-foreground uppercase">{coin.symbol}</p>
+                    <p className="text-xs font-medium mt-1">${coin.current_price.toLocaleString()}</p>
+                    <div className={`text-xs flex items-center gap-1 mt-1 ${
+                      coin.price_change_percentage_24h >= 0 ? 'text-crypto-gain' : 'text-crypto-loss'
+                    }`}>
+                      {coin.price_change_percentage_24h >= 0 ? '+' : ''}
+                      {coin.price_change_percentage_24h.toFixed(2)}%
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            {/* Trending Coins (Details Only) */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span>Trending Coins</span>
+                <Badge variant="outline">Details Only</Badge>
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                {trending.slice(0, 10).map((coin, index) => {
+                  const isTop10 = coins.some(topCoin => topCoin.id === coin.id);
+                  return (
+                    <motion.div
+                      key={coin.id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={async () => {
+                        if (isTop10) {
+                          // If it's in top 10, show interactive chart
+                          const fullCoinData = coins.find(c => c.id === coin.id);
+                          if (fullCoinData) {
+                            setSelectedCoin(fullCoinData);
+                          }
+                        } else {
+                          // If not in top 10, show details only
+                          try {
+                            const coinDetails = await coinGeckoApi.getCoinDetails(coin.id);
+                            alert(`${coinDetails.name} - Details Only\n\nPrice: $${coinDetails.market_data.current_price.usd.toLocaleString()}\nMarket Cap: $${(coinDetails.market_data.market_cap.usd / 1e9).toFixed(2)}B\nRank: #${coinDetails.market_cap_rank}\n\n${coinDetails.description.en.slice(0, 200)}...`);
+                          } catch (error) {
+                            console.error('Error fetching coin details:', error);
+                          }
+                        }
+                      }}
+                      className={`p-4 rounded-lg bg-background/50 border transition-all cursor-pointer hover:scale-105 ${
+                        isTop10 
+                          ? 'border-primary/20 hover:border-primary/50' 
+                          : 'border-border/30 hover:border-secondary/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        {isTop10 ? (
+                          <Badge className="text-xs bg-primary">Top 10</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs">
+                            #{index + 1}
+                          </Badge>
+                        )}
+                        <img src={coin.small} alt={coin.name} className="w-6 h-6" />
+                      </div>
+                      <h4 className="font-medium text-sm">{coin.name}</h4>
+                      <p className="text-xs text-muted-foreground uppercase">{coin.symbol}</p>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Interactive Chart */}
+      {selectedCoin && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <PriceChart
+            coinId={selectedCoin.id}
+            coinName={selectedCoin.name}
+            selectedTimeframe={selectedTimeframe}
+          />
+        </motion.div>
+      )}
 
       {/* Top Gainers & Losers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

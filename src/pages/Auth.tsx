@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 
@@ -17,7 +17,6 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
 
   const { signIn, signUp, user, loading } = useAuth();
-  const { toast } = useToast();
 
   // Redirect if already authenticated
   if (loading) {
@@ -34,25 +33,27 @@ export default function Auth() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!email || !password) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    // Basic validation
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters long');
+      return;
+    }
 
     setIsLoading(true);
     try {
-      const { error } = isLogin
+      const result = isLogin
         ? await signIn(email, password)
         : await signUp(email, password);
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else if (!isLogin) {
-        toast({
-          title: "Success",
-          description: "Check your email for the confirmation link!",
-        });
+      if (!result.success && result.error) {
+        toast.error(result.error);
+      } else if (result.success && !isLogin) {
+        // Additional success message for signup is handled in useAuth
       }
     } finally {
       setIsLoading(false);

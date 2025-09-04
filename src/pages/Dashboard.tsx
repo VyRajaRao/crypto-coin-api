@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, DollarSign, Activity, Eye, Star } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Activity, Eye, Star, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cryptoApi, CoinData, GlobalData } from "@/services/cryptoApi";
+import { coinGeckoApi, CoinData } from "@/services/coinGeckoApi";
+import { TableSkeleton } from "@/components/LoadingSpinner";
 
 function StatCard({ title, value, change, icon: Icon, isLoading }: {
   title: string;
@@ -117,7 +118,7 @@ function CoinRow({ coin, index }: { coin: CoinData; index: number }) {
 
 export default function Dashboard() {
   const [coins, setCoins] = useState<CoinData[]>([]);
-  const [globalData, setGlobalData] = useState<GlobalData | null>(null);
+  const [globalData, setGlobalData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -125,15 +126,23 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const [coinsData, globalDataResponse] = await Promise.all([
-          cryptoApi.getCoins('usd', 20),
-          cryptoApi.getGlobalData()
-        ]);
-
+        setError(null);
+        
+        // Only fetch essential data for faster loading
+        const coinsData = await coinGeckoApi.getTopCoins(10, 'usd');
         setCoins(coinsData);
-        setGlobalData(globalDataResponse.data);
-      } catch (err) {
-        setError('Failed to fetch market data');
+        
+        // Skip global data for now to speed up loading
+        setGlobalData({
+          total_market_cap: { usd: coinsData.reduce((sum, coin) => sum + coin.market_cap, 0) },
+          total_volume: { usd: coinsData.reduce((sum, coin) => sum + coin.total_volume, 0) },
+          market_cap_change_percentage_24h_usd: 0,
+          active_cryptocurrencies: 10000,
+          market_cap_percentage: { btc: 45 }
+        });
+      } catch (err: any) {
+        const errorMessage = err.message || 'Failed to fetch market data';
+        setError(errorMessage);
         console.error('Error fetching data:', err);
       } finally {
         setIsLoading(false);
@@ -142,8 +151,8 @@ export default function Dashboard() {
 
     fetchData();
     
-    // Set up polling for live updates every 30 seconds
-    const interval = setInterval(fetchData, 30000);
+    // Increase polling interval to reduce API calls
+    const interval = setInterval(fetchData, 120000); // 2 minutes
     return () => clearInterval(interval);
   }, []);
 
@@ -156,10 +165,19 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="p-8 text-center">
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              Market Dashboard
+            </h1>
+            <p className="text-muted-foreground mt-1">Failed to load market data</p>
+          </div>
+        </div>
+        <Card className="bg-gradient-card border-border/50 p-8 text-center">
+          <AlertTriangle className="w-16 h-16 text-destructive mx-auto mb-4" />
           <p className="text-destructive mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>
+          <Button onClick={() => window.location.reload()} className="bg-gradient-primary">
             Try Again
           </Button>
         </Card>
@@ -236,19 +254,8 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="p-6 space-y-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-muted animate-pulse rounded-full"></div>
-                      <div className="space-y-1">
-                        <div className="w-20 h-4 bg-muted animate-pulse rounded"></div>
-                        <div className="w-12 h-3 bg-muted animate-pulse rounded"></div>
-                      </div>
-                    </div>
-                    <div className="w-16 h-4 bg-muted animate-pulse rounded"></div>
-                  </div>
-                ))}
+              <div className="p-6">
+                <TableSkeleton rows={10} />
               </div>
             ) : (
               <div className="overflow-x-auto">

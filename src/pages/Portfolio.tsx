@@ -7,25 +7,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { cryptoApi } from "@/services/cryptoApi";
+import { coinGeckoApi } from "@/services/coinGeckoApi";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import type { Portfolio as PortfolioRow } from "@/types/database";
 
 interface PortfolioItem {
-  id: string;
+  id: number;
   coinId: string;
-  name: string;
-  symbol: string;
+  name?: string;
+  symbol?: string;
   amount: number;
-  purchasePrice: number;
+  purchasePrice?: number;
   currentPrice?: number;
   image?: string;
+  created_at?: string;
 }
 
 function PortfolioItemCard({ item, onRemove }: { 
-  item: PortfolioItem & { currentPrice: number; image: string }; 
-  onRemove: (id: string) => void 
+  item: PortfolioItem & { currentPrice: number; image: string; name: string; symbol: string }; 
+  onRemove: (id: number) => void 
 }) {
   const currentValue = item.amount * item.currentPrice;
-  const purchaseValue = item.amount * item.purchasePrice;
+  const purchaseValue = item.amount * (item.purchasePrice || item.currentPrice);
   const profit = currentValue - purchaseValue;
   const profitPercentage = ((currentValue - purchaseValue) / purchaseValue) * 100;
   const isProfit = profit >= 0;
@@ -95,7 +100,7 @@ function PortfolioItemCard({ item, onRemove }: {
   );
 }
 
-function AddAssetDialog({ onAdd }: { onAdd: (item: Omit<PortfolioItem, 'id'>) => void }) {
+function AddAssetDialog({ onAdd }: { onAdd: (coinId: string, amount: number) => void }) {
   const [open, setOpen] = useState(false);
   const [coinId, setCoinId] = useState("");
   const [name, setName] = useState("");  
@@ -112,7 +117,7 @@ function AddAssetDialog({ onAdd }: { onAdd: (item: Omit<PortfolioItem, 'id'>) =>
     }
 
     try {
-      const response = await cryptoApi.searchCoins(query);
+      const response = await coinGeckoApi.searchCoins(query);
       setSearchResults(response.coins.slice(0, 5));
     } catch (error) {
       console.error('Search error:', error);
@@ -128,17 +133,11 @@ function AddAssetDialog({ onAdd }: { onAdd: (item: Omit<PortfolioItem, 'id'>) =>
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!coinId || !amount || !purchasePrice) return;
+    if (!coinId || !amount) return;
 
     setIsLoading(true);
     try {
-      await onAdd({
-        coinId,
-        name,
-        symbol,
-        amount: parseFloat(amount),
-        purchasePrice: parseFloat(purchasePrice),
-      });
+      await onAdd(coinId, parseFloat(amount));
       
       // Reset form
       setCoinId("");
@@ -228,7 +227,7 @@ function AddAssetDialog({ onAdd }: { onAdd: (item: Omit<PortfolioItem, 'id'>) =>
 
           <Button
             type="submit"
-            disabled={!coinId || !amount || !purchasePrice || isLoading}
+            disabled={!coinId || !amount || isLoading}
             className="w-full bg-gradient-primary hover:shadow-glow transition-all duration-300"
           >
             {isLoading ? "Adding..." : "Add Asset"}
@@ -240,23 +239,37 @@ function AddAssetDialog({ onAdd }: { onAdd: (item: Omit<PortfolioItem, 'id'>) =>
 }
 
 export default function Portfolio() {
+  const { user } = useAuth();
   const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
-  const [portfolioWithPrices, setPortfolioWithPrices] = useState<(PortfolioItem & { currentPrice: number; image: string })[]>([]);
+  const [portfolioWithPrices, setPortfolioWithPrices] = useState<(PortfolioItem & { currentPrice: number; image: string; name: string; symbol: string })[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Load portfolio from localStorage
+  // Load portfolio from Supabase
   useEffect(() => {
-    const saved = localStorage.getItem('crypto-portfolio');
-    if (saved) {
-      setPortfolio(JSON.parse(saved));
-    }
-  }, []);
+    const fetchPortfolio = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('portfolio')
+          .select('*')
+          .eq('user_id', user.id);
 
-  // Save portfolio to localStorage
-  const savePortfolio = (newPortfolio: PortfolioItem[]) => {
-    localStorage.setItem('crypto-portfolio', JSON.stringify(newPortfolio));
-    setPortfolio(newPortfolio);
-  };
+        if (error) {
+          console.error('Error fetching portfolio:', error);
+          toast.error('Failed to load portfolio');
+          return;
+        }
+
+        setPortfolio(data || []);
+      } catch (error) {
+        console.error('Error fetching portfolio:', error);
+        toast.error('Failed to load portfolio');
+      }
+    };
+
+    fetchPortfolio();
+  }, [user]);
 
   // Fetch current prices for portfolio items
   useEffect(() => {
@@ -268,8 +281,8 @@ export default function Portfolio() {
 
       setIsLoading(true);
       try {
-        // Get current prices from Supabase portfolio or fetch from API
-        const coinsData = await cryptoApi.getCoins('usd', 250);
+        const coinIds = portfolio.map(item => item.coinId);
+        const coinsData = await coinGeckoApi.getCoinsByIds(coinIds, 'usd');
         
         const updatedPortfolio = portfolio.map(item => {
           const coinData = coinsData.find(coin => coin.id === item.coinId);
@@ -277,36 +290,79 @@ export default function Portfolio() {
             ...item,
             currentPrice: coinData?.current_price || 0,
             image: coinData?.image || '',
+            name: coinData?.name || item.coinId,
+            symbol: coinData?.symbol || '',
           };
         });
 
         setPortfolioWithPrices(updatedPortfolio);
       } catch (error) {
         console.error('Error fetching prices:', error);
+        toast.error('Failed to fetch current prices');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchPrices();
-    const interval = setInterval(fetchPrices, 30000); // Update every 30 seconds
+    const interval = setInterval(fetchPrices, 120000); // Update every 2 minutes
     return () => clearInterval(interval);
   }, [portfolio]);
 
-  const addAsset = async (asset: Omit<PortfolioItem, 'id'>) => {
-    const newAsset: PortfolioItem = {
-      ...asset,
-      id: Date.now().toString(),
-    };
-    savePortfolio([...portfolio, newAsset]);
+  const addAsset = async (coinId: string, amount: number) => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('portfolio')
+        .insert({
+          user_id: user.id,
+          coin_id: coinId,
+          amount: amount
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error adding asset:', error);
+        toast.error('Failed to add asset');
+        return;
+      }
+
+      setPortfolio(prev => [...prev, data]);
+      toast.success('Asset added to portfolio');
+    } catch (error) {
+      console.error('Error adding asset:', error);
+      toast.error('Failed to add asset');
+    }
   };
 
-  const removeAsset = (id: string) => {
-    savePortfolio(portfolio.filter(item => item.id !== id));
+  const removeAsset = async (id: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('portfolio')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error removing asset:', error);
+        toast.error('Failed to remove asset');
+        return;
+      }
+
+      setPortfolio(prev => prev.filter(item => item.id !== id));
+      toast.success('Asset removed from portfolio');
+    } catch (error) {
+      console.error('Error removing asset:', error);
+      toast.error('Failed to remove asset');
+    }
   };
 
   const totalValue = portfolioWithPrices.reduce((sum, item) => sum + (item.amount * item.currentPrice), 0);
-  const totalInvested = portfolioWithPrices.reduce((sum, item) => sum + (item.amount * item.purchasePrice), 0);
+  const totalInvested = portfolioWithPrices.reduce((sum, item) => sum + (item.amount * (item.purchasePrice || item.currentPrice)), 0);
   const totalProfit = totalValue - totalInvested;
   const totalProfitPercentage = totalInvested > 0 ? ((totalValue - totalInvested) / totalInvested) * 100 : 0;
 

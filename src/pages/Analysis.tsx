@@ -1,19 +1,21 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, PieChart, Target, TrendingUp, DollarSign, Percent } from "lucide-react";
+import { BarChart3, PieChart, Target, TrendingUp, DollarSign, Percent, AlertTriangle, CheckCircle, XCircle, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { cryptoApi, type CoinData } from "@/services/cryptoApi";
+import { supabase } from "@/lib/supabase";
+import { coinGeckoApi, type CoinData } from "@/services/coinGeckoApi";
+import { toast } from "sonner";
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { calculateAllIndicators, analyzeTechnicalIndicators, type TechnicalIndicators, type IndicatorAnalysis, type PriceData } from "@/utils/indicators";
 
 interface PortfolioItem {
-  id: string;
+  id: number;
   user_id: string;
-  asset_symbol: string;
+  coin_id: string;
   amount: number;
-  avg_buy_price: number;
+  created_at: string;
 }
 
 interface EnrichedPortfolioItem extends PortfolioItem {
@@ -22,7 +24,9 @@ interface EnrichedPortfolioItem extends PortfolioItem {
   profit: number;
   profitPercentage: number;
   name: string;
+  symbol: string;
   image: string;
+  avg_buy_price: number;
 }
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))', '#8b5cf6', '#06d6a0', '#f72585', '#4cc9f0'];
@@ -34,6 +38,8 @@ export default function Analysis() {
   const [totalValue, setTotalValue] = useState(0);
   const [totalInvested, setTotalInvested] = useState(0);
   const [totalProfit, setTotalProfit] = useState(0);
+  const [portfolioIndicators, setPortfolioIndicators] = useState<Map<string, { indicators: TechnicalIndicators; analysis: IndicatorAnalysis }>>(new Map());
+  const [insights, setInsights] = useState<Array<{ type: 'warning' | 'success' | 'info'; message: string; icon: any }>>([]);
 
   useEffect(() => {
     const fetchPortfolioAnalysis = async () => {
@@ -57,15 +63,17 @@ export default function Analysis() {
           return;
         }
 
-        // Get current prices for all coins
-        const coins = await cryptoApi.getCoins('usd', 250);
+        // Get current prices for portfolio coins
+        const coinIds = portfolioData.map(item => item.coin_id);
+        const coins = await coinGeckoApi.getCoinsByIds(coinIds, 'usd');
         
         // Enrich portfolio with current market data
         const enrichedPortfolio: EnrichedPortfolioItem[] = portfolioData.map(item => {
-          const coinData = coins.find(coin => coin.symbol.toLowerCase() === item.asset_symbol.toLowerCase());
+          const coinData = coins.find(coin => coin.id === item.coin_id);
           const currentPrice = coinData?.current_price || 0;
           const currentValue = item.amount * currentPrice;
-          const investedValue = item.amount * item.avg_buy_price;
+          // Use actual average price from database
+          const investedValue = item.amount * item.avg_price;
           const profit = currentValue - investedValue;
           const profitPercentage = investedValue > 0 ? (profit / investedValue) * 100 : 0;
 
@@ -75,8 +83,10 @@ export default function Analysis() {
             currentValue,
             profit,
             profitPercentage,
-            name: coinData?.name || item.asset_symbol,
-            image: coinData?.image || ''
+            name: coinData?.name || item.coin_id,
+            symbol: coinData?.symbol || '',
+            image: coinData?.image || '',
+            avg_buy_price: item.avg_price // Use actual purchase price from database
           };
         });
 
@@ -91,8 +101,13 @@ export default function Analysis() {
         setTotalInvested(invested);
         setTotalProfit(profit);
 
-      } catch (error) {
+        // Calculate technical indicators and insights
+        await calculateTechnicalAnalysis(enrichedPortfolio);
+        generateInsights(enrichedPortfolio, profit);
+
+      } catch (error: any) {
         console.error('Error fetching portfolio analysis:', error);
+        toast.error('Failed to load portfolio analysis');
       } finally {
         setIsLoading(false);
       }
@@ -100,6 +115,118 @@ export default function Analysis() {
 
     fetchPortfolioAnalysis();
   }, [user]);
+
+  const calculateTechnicalAnalysis = async (portfolioItems: EnrichedPortfolioItem[]) => {
+    const indicatorsMap = new Map();
+    
+    for (const item of portfolioItems) {
+      try {
+        // Fetch historical data for technical analysis
+        const historicalData = await coinGeckoApi.getCoinHistory(item.coin_id, 30);
+        const priceData: PriceData[] = historicalData.prices.map(([timestamp, price]) => ({
+          timestamp,
+          price
+        }));
+        
+        // Calculate technical indicators
+        const indicators = calculateAllIndicators(priceData);
+        const analysis = analyzeTechnicalIndicators(indicators, item.currentPrice);
+        
+        indicatorsMap.set(item.coin_id, { indicators, analysis });
+      } catch (error) {
+        console.error(`Error calculating indicators for ${item.coin_id}:`, error);
+      }
+    }
+    
+    setPortfolioIndicators(indicatorsMap);
+  };
+
+  const generateInsights = (portfolioItems: EnrichedPortfolioItem[], totalProfit: number) => {
+    const newInsights: Array<{ type: 'warning' | 'success' | 'info'; message: string; icon: any }> = [];
+    
+    // Portfolio performance insights
+    const lossyAssets = portfolioItems.filter(item => item.profit < 0);
+    const profitableAssets = portfolioItems.filter(item => item.profit > 0);
+    const bigLosers = portfolioItems.filter(item => item.profitPercentage < -10);
+    
+    if (bigLosers.length > 0) {
+      newInsights.push({
+        type: 'warning',
+        message: `${bigLosers.length} asset${bigLosers.length > 1 ? 's' : ''} down >10%: ${bigLosers.map(a => a.symbol).join(', ')}`,
+        icon: AlertTriangle
+      });
+    }
+    
+    if (totalProfit > 0) {
+      newInsights.push({
+        type: 'success',
+        message: `Portfolio is profitable with $${Math.abs(totalProfit).toLocaleString()} gains`,
+        icon: CheckCircle
+      });
+    }
+    
+    // Technical analysis insights
+    const overboughtAssets: string[] = [];
+    const oversoldAssets: string[] = [];
+    const strongBuySignals: string[] = [];
+    
+    portfolioIndicators.forEach((data, coinId) => {
+      const item = portfolioItems.find(p => p.coin_id === coinId);
+      if (!item) return;
+      
+      const { analysis } = data;
+      
+      if (analysis.rsiAnalysis === 'overbought') {
+        overboughtAssets.push(item.symbol);
+      } else if (analysis.rsiAnalysis === 'oversold') {
+        oversoldAssets.push(item.symbol);
+      }
+      
+      if (analysis.overallSignal === 'strong_buy') {
+        strongBuySignals.push(item.symbol);
+      }
+    });
+    
+    if (overboughtAssets.length > 0) {
+      newInsights.push({
+        type: 'warning',
+        message: `Overbought (RSI>70): ${overboughtAssets.join(', ')} - Consider taking profits`,
+        icon: AlertTriangle
+      });
+    }
+    
+    if (oversoldAssets.length > 0) {
+      newInsights.push({
+        type: 'info',
+        message: `Oversold (RSI<30): ${oversoldAssets.join(', ')} - Potential buying opportunity`,
+        icon: Activity
+      });
+    }
+    
+    if (strongBuySignals.length > 0) {
+      newInsights.push({
+        type: 'success',
+        message: `Strong buy signals: ${strongBuySignals.join(', ')} - Technical indicators align bullishly`,
+        icon: TrendingUp
+      });
+    }
+    
+    // Diversification insights
+    const topHolding = portfolioItems.reduce((prev, current) => 
+      prev.currentValue > current.currentValue ? prev : current
+    );
+    const topHoldingPercentage = (topHolding.currentValue / totalValue) * 100;
+    
+    if (topHoldingPercentage > 50) {
+      newInsights.push({
+        type: 'warning',
+        message: `${topHolding.symbol} represents ${topHoldingPercentage.toFixed(1)}% of portfolio - Consider diversifying`,
+        icon: PieChart
+      });
+    }
+    
+    setInsights(newInsights);
+  };
 
   // Prepare chart data
   const pieChartData = portfolio.map((item, index) => ({
@@ -110,7 +237,7 @@ export default function Analysis() {
   }));
 
   const barChartData = portfolio.map(item => ({
-    name: item.asset_symbol.toUpperCase(),
+    name: item.symbol.toUpperCase(),
     profit: item.profit,
     profitPercentage: item.profitPercentage
   }));
@@ -230,6 +357,55 @@ export default function Analysis() {
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Insights Cards */}
+      {insights.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <Card className="bg-gradient-card border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-primary" />
+                Portfolio Insights
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {insights.map((insight, index) => {
+                  const IconComponent = insight.icon;
+                  return (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 + index * 0.05 }}
+                      className={`flex items-start gap-3 p-3 rounded-lg border ${
+                        insight.type === 'warning'
+                          ? 'bg-destructive/5 border-destructive/20'
+                          : insight.type === 'success'
+                          ? 'bg-crypto-gain/5 border-crypto-gain/20'
+                          : 'bg-primary/5 border-primary/20'
+                      }`}
+                    >
+                      <IconComponent className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
+                        insight.type === 'warning'
+                          ? 'text-destructive'
+                          : insight.type === 'success'
+                          ? 'text-crypto-gain'
+                          : 'text-primary'
+                      }`} />
+                      <p className="text-sm leading-relaxed">{insight.message}</p>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -356,11 +532,44 @@ export default function Analysis() {
                     {item.image && (
                       <img src={item.image} alt={item.name} className="w-10 h-10 rounded-full" />
                     )}
-                    <div>
+                    <div className="flex-1">
                       <h4 className="font-medium">{item.name}</h4>
                       <p className="text-sm text-muted-foreground">
-                        {item.amount.toFixed(6)} {item.asset_symbol.toUpperCase()}
+                        {item.amount.toFixed(6)} {item.symbol.toUpperCase()}
                       </p>
+                      {portfolioIndicators.has(item.coin_id) && (
+                        <div className="flex items-center gap-2 mt-1">
+                          {(() => {
+                            const data = portfolioIndicators.get(item.coin_id);
+                            if (!data) return null;
+                            const { indicators, analysis } = data;
+                            return (
+                              <>
+                                {indicators.rsi !== null && (
+                                  <span className={`text-xs px-2 py-1 rounded ${
+                                    analysis.rsiAnalysis === 'overbought'
+                                      ? 'bg-destructive/20 text-destructive'
+                                      : analysis.rsiAnalysis === 'oversold'
+                                      ? 'bg-crypto-gain/20 text-crypto-gain'
+                                      : 'bg-muted text-muted-foreground'
+                                  }`}>
+                                    RSI: {indicators.rsi.toFixed(1)}
+                                  </span>
+                                )}
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  analysis.overallSignal === 'strong_buy' || analysis.overallSignal === 'buy'
+                                    ? 'bg-crypto-gain/20 text-crypto-gain'
+                                    : analysis.overallSignal === 'strong_sell' || analysis.overallSignal === 'sell'
+                                    ? 'bg-destructive/20 text-destructive'
+                                    : 'bg-muted text-muted-foreground'
+                                }`}>
+                                  {analysis.overallSignal.replace('_', ' ').toUpperCase()}
+                                </span>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      )}
                     </div>
                   </div>
                   

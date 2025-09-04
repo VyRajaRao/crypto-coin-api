@@ -8,25 +8,20 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 import { Navigate } from "react-router-dom";
 
 interface UserPreferences {
   theme: string;
-  default_currency: string;
-  accent_color: string;
-  refresh_rate: number;
+  currency: string;
 }
 
 export default function Settings() {
   const { user, signOut } = useAuth();
-  const { toast } = useToast();
   const [preferences, setPreferences] = useState<UserPreferences>({
     theme: 'dark',
-    default_currency: 'USD',
-    accent_color: '#00ffff',
-    refresh_rate: 60
+    currency: 'usd'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -45,12 +40,11 @@ export default function Settings() {
 
         if (error && error.code !== 'PGRST116') {
           console.error('Error fetching preferences:', error);
+          toast.error('Failed to load preferences');
         } else if (data) {
           setPreferences({
             theme: data.theme || 'dark',
-            default_currency: data.default_currency || 'USD',
-            accent_color: data.accent_color || '#00ffff',
-            refresh_rate: data.refresh_rate || 60
+            currency: data.currency || 'usd'
           });
         }
       } catch (error) {
@@ -73,24 +67,15 @@ export default function Settings() {
         .upsert({
           user_id: user.id,
           theme: preferences.theme,
-          default_currency: preferences.default_currency,
-          accent_color: preferences.accent_color,
-          refresh_rate: preferences.refresh_rate
+          currency: preferences.currency
         });
 
       if (error) throw error;
 
-      toast({
-        title: "Success",
-        description: "Preferences saved successfully!",
-      });
+      toast.success('Preferences saved successfully!');
     } catch (error) {
       console.error('Error saving preferences:', error);
-      toast({
-        title: "Error",
-        description: "Failed to save preferences. Please try again.",
-        variant: "destructive",
-      });
+      toast.error('Failed to save preferences. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -99,12 +84,10 @@ export default function Settings() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out.",
-      });
+      // Toast is handled in the signOut function
     } catch (error) {
       console.error('Error signing out:', error);
+      toast.error('Failed to sign out. Please try again.');
     }
   };
 
@@ -198,7 +181,6 @@ export default function Settings() {
                   <SelectContent>
                     <SelectItem value="dark">Dark</SelectItem>
                     <SelectItem value="light">Light</SelectItem>
-                    <SelectItem value="system">System</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -206,57 +188,17 @@ export default function Settings() {
               <div className="space-y-2">
                 <Label htmlFor="currency">Default Currency</Label>
                 <Select
-                  value={preferences.default_currency}
-                  onValueChange={(value) => setPreferences(prev => ({ ...prev, default_currency: value }))}
+                  value={preferences.currency}
+                  onValueChange={(value) => setPreferences(prev => ({ ...prev, currency: value }))}
                 >
                   <SelectTrigger className="bg-background border-border/50">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="USD">USD - US Dollar</SelectItem>
-                    <SelectItem value="EUR">EUR - Euro</SelectItem>
-                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                    <SelectItem value="INR">INR - Indian Rupee</SelectItem>
-                    <SelectItem value="BTC">BTC - Bitcoin</SelectItem>
-                    <SelectItem value="ETH">ETH - Ethereum</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="accent">Accent Color</Label>
-                <div className="flex items-center gap-3">
-                  <Input
-                    id="accent"
-                    type="color"
-                    value={preferences.accent_color}
-                    onChange={(e) => setPreferences(prev => ({ ...prev, accent_color: e.target.value }))}
-                    className="w-12 h-10 p-1 bg-background border-border/50"
-                  />
-                  <Input
-                    value={preferences.accent_color}
-                    onChange={(e) => setPreferences(prev => ({ ...prev, accent_color: e.target.value }))}
-                    className="bg-background border-border/50 font-mono"
-                    placeholder="#00ffff"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="refresh">Auto-Refresh Rate (seconds)</Label>
-                <Select
-                  value={preferences.refresh_rate.toString()}
-                  onValueChange={(value) => setPreferences(prev => ({ ...prev, refresh_rate: parseInt(value) }))}
-                >
-                  <SelectTrigger className="bg-background border-border/50">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="30">30 seconds</SelectItem>
-                    <SelectItem value="60">1 minute</SelectItem>
-                    <SelectItem value="300">5 minutes</SelectItem>
-                    <SelectItem value="600">10 minutes</SelectItem>
-                    <SelectItem value="0">Disabled</SelectItem>
+                    <SelectItem value="usd">USD - US Dollar</SelectItem>
+                    <SelectItem value="eur">EUR - Euro</SelectItem>
+                    <SelectItem value="btc">BTC - Bitcoin</SelectItem>
+                    <SelectItem value="eth">ETH - Ethereum</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
