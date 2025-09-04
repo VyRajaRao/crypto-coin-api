@@ -1,107 +1,23 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart } from "lucide-react";
+import { Plus, Trash2, TrendingUp, TrendingDown, Wallet, PieChart, Edit } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
+import { useSupabasePortfolio } from "@/hooks/useSupabasePortfolio";
 import { cryptoApi } from "@/services/cryptoApi";
+import { toast } from "@/components/ui/sonner";
+import { Navigate } from "react-router-dom";
 
-interface PortfolioItem {
-  id: string;
-  coinId: string;
-  name: string;
-  symbol: string;
-  amount: number;
-  purchasePrice: number;
-  currentPrice?: number;
-  image?: string;
-}
-
-function PortfolioItemCard({ item, onRemove }: { 
-  item: PortfolioItem & { currentPrice: number; image: string }; 
-  onRemove: (id: string) => void 
-}) {
-  const currentValue = item.amount * item.currentPrice;
-  const purchaseValue = item.amount * item.purchasePrice;
-  const profit = currentValue - purchaseValue;
-  const profitPercentage = ((currentValue - purchaseValue) / purchaseValue) * 100;
-  const isProfit = profit >= 0;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.2 }}
-    >
-      <Card className="bg-gradient-card border-border/50 hover:border-primary/30 transition-all duration-300">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <img src={item.image} alt={item.name} className="w-10 h-10 rounded-full" />
-              <div>
-                <h3 className="font-semibold text-foreground">{item.name}</h3>
-                <p className="text-sm text-muted-foreground uppercase">{item.symbol}</p>
-              </div>
-            </div>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onRemove(item.id)}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Holdings</p>
-              <p className="font-medium text-foreground">{item.amount.toFixed(6)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Current Price</p>
-              <p className="font-medium text-foreground">${item.currentPrice.toLocaleString()}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Current Value</p>
-              <p className="font-semibold text-foreground">${currentValue.toLocaleString()}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">P&L</p>
-              <div className="flex items-center gap-1">
-                {isProfit ? (
-                  <TrendingUp className="w-4 h-4 text-crypto-gain" />
-                ) : (
-                  <TrendingDown className="w-4 h-4 text-crypto-loss" />
-                )}
-                <div className="text-sm">
-                  <p className={`font-medium ${isProfit ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
-                    ${Math.abs(profit).toLocaleString()}
-                  </p>
-                  <p className={`text-xs ${isProfit ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
-                    {profitPercentage.toFixed(2)}%
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-}
-
-function AddAssetDialog({ onAdd }: { onAdd: (item: Omit<PortfolioItem, 'id'>) => void }) {
+function AddAssetDialog({ onAdd }: { onAdd: (symbol: string, amount: number, buyPrice: number) => Promise<void> }) {
   const [open, setOpen] = useState(false);
-  const [coinId, setCoinId] = useState("");
-  const [name, setName] = useState("");  
   const [symbol, setSymbol] = useState("");
   const [amount, setAmount] = useState("");
-  const [purchasePrice, setPurchasePrice] = useState("");
+  const [buyPrice, setBuyPrice] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
 
@@ -120,35 +36,28 @@ function AddAssetDialog({ onAdd }: { onAdd: (item: Omit<PortfolioItem, 'id'>) =>
   };
 
   const selectCoin = (coin: any) => {
-    setCoinId(coin.id);
-    setName(coin.name);
     setSymbol(coin.symbol);
     setSearchResults([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!coinId || !amount || !purchasePrice) return;
+    if (!symbol || !amount || !buyPrice) return;
 
     setIsLoading(true);
     try {
-      await onAdd({
-        coinId,
-        name,
-        symbol,
-        amount: parseFloat(amount),
-        purchasePrice: parseFloat(purchasePrice),
-      });
+      await onAdd(symbol, parseFloat(amount), parseFloat(buyPrice));
       
       // Reset form
-      setCoinId("");
-      setName("");
       setSymbol("");
       setAmount("");
-      setPurchasePrice("");
+      setBuyPrice("");
       setOpen(false);
+      
+      toast.success("Asset added to portfolio successfully!");
     } catch (error) {
       console.error('Error adding asset:', error);
+      toast.error("Failed to add asset to portfolio");
     } finally {
       setIsLoading(false);
     }
@@ -172,9 +81,9 @@ function AddAssetDialog({ onAdd }: { onAdd: (item: Omit<PortfolioItem, 'id'>) =>
             <Input
               id="search"
               placeholder="Bitcoin, Ethereum, etc..."
-              value={name}
+              value={symbol}
               onChange={(e) => {
-                setName(e.target.value);
+                setSymbol(e.target.value);
                 searchCoins(e.target.value);
               }}
               className="bg-background border-border/50"
@@ -210,6 +119,7 @@ function AddAssetDialog({ onAdd }: { onAdd: (item: Omit<PortfolioItem, 'id'>) =>
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="bg-background border-border/50"
+                required
               />
             </div>
             <div className="space-y-2">
@@ -219,16 +129,17 @@ function AddAssetDialog({ onAdd }: { onAdd: (item: Omit<PortfolioItem, 'id'>) =>
                 type="number"
                 step="any"
                 placeholder="0.00"
-                value={purchasePrice}
-                onChange={(e) => setPurchasePrice(e.target.value)}
+                value={buyPrice}
+                onChange={(e) => setBuyPrice(e.target.value)}
                 className="bg-background border-border/50"
+                required
               />
             </div>
           </div>
 
           <Button
             type="submit"
-            disabled={!coinId || !amount || !purchasePrice || isLoading}
+            disabled={!symbol || !amount || !buyPrice || isLoading}
             className="w-full bg-gradient-primary hover:shadow-glow transition-all duration-300"
           >
             {isLoading ? "Adding..." : "Add Asset"}
@@ -239,74 +150,182 @@ function AddAssetDialog({ onAdd }: { onAdd: (item: Omit<PortfolioItem, 'id'>) =>
   );
 }
 
-export default function Portfolio() {
-  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
-  const [portfolioWithPrices, setPortfolioWithPrices] = useState<(PortfolioItem & { currentPrice: number; image: string })[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+function PortfolioItemCard({ 
+  item, 
+  onRemove, 
+  onUpdate 
+}: { 
+  item: any; 
+  onRemove: (id: string) => void;
+  onUpdate: (id: string, amount: number, avgBuyPrice: number) => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editAmount, setEditAmount] = useState(item.amount.toString());
+  const [editPrice, setEditPrice] = useState(item.avg_buy_price.toString());
 
-  // Load portfolio from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('crypto-portfolio');
-    if (saved) {
-      setPortfolio(JSON.parse(saved));
+  const currentValue = item.amount * item.currentPrice;
+  const purchaseValue = item.amount * item.avg_buy_price;
+  const profit = currentValue - purchaseValue;
+  const profitPercentage = purchaseValue > 0 ? ((profit / purchaseValue) * 100) : 0;
+  const isProfit = profit >= 0;
+
+  const handleUpdate = async () => {
+    try {
+      await onUpdate(item.id, parseFloat(editAmount), parseFloat(editPrice));
+      setIsEditing(false);
+      toast.success("Portfolio item updated successfully!");
+    } catch (error) {
+      toast.error("Failed to update portfolio item");
     }
-  }, []);
-
-  // Save portfolio to localStorage
-  const savePortfolio = (newPortfolio: PortfolioItem[]) => {
-    localStorage.setItem('crypto-portfolio', JSON.stringify(newPortfolio));
-    setPortfolio(newPortfolio);
   };
 
-  // Fetch current prices for portfolio items
-  useEffect(() => {
-    const fetchPrices = async () => {
-      if (portfolio.length === 0) {
-        setPortfolioWithPrices([]);
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        // Get current prices from Supabase portfolio or fetch from API
-        const coinsData = await cryptoApi.getCoins('usd', 250);
-        
-        const updatedPortfolio = portfolio.map(item => {
-          const coinData = coinsData.find(coin => coin.id === item.coinId);
-          return {
-            ...item,
-            currentPrice: coinData?.current_price || 0,
-            image: coinData?.image || '',
-          };
-        });
-
-        setPortfolioWithPrices(updatedPortfolio);
-      } catch (error) {
-        console.error('Error fetching prices:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPrices();
-    const interval = setInterval(fetchPrices, 30000); // Update every 30 seconds
-    return () => clearInterval(interval);
-  }, [portfolio]);
-
-  const addAsset = async (asset: Omit<PortfolioItem, 'id'>) => {
-    const newAsset: PortfolioItem = {
-      ...asset,
-      id: Date.now().toString(),
-    };
-    savePortfolio([...portfolio, newAsset]);
+  const handleRemove = async () => {
+    try {
+      await onRemove(item.id);
+      toast.success("Asset removed from portfolio");
+    } catch (error) {
+      toast.error("Failed to remove asset");
+    }
   };
 
-  const removeAsset = (id: string) => {
-    savePortfolio(portfolio.filter(item => item.id !== id));
-  };
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card className="bg-gradient-card border-border/50 hover:border-primary/30 transition-all duration-300">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              {item.image && (
+                <img src={item.image} alt={item.name} className="w-10 h-10 rounded-full" />
+              )}
+              <div>
+                <h3 className="font-semibold text-foreground">{item.name}</h3>
+                <p className="text-sm text-muted-foreground uppercase">{item.asset_symbol}</p>
+              </div>
+            </div>
+            <div className="flex gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsEditing(!isEditing)}
+                className="text-primary hover:text-primary hover:bg-primary/10"
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleRemove}
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
 
-  const totalValue = portfolioWithPrices.reduce((sum, item) => sum + (item.amount * item.currentPrice), 0);
-  const totalInvested = portfolioWithPrices.reduce((sum, item) => sum + (item.amount * item.purchasePrice), 0);
+          {isEditing ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit-amount">Amount</Label>
+                  <Input
+                    id="edit-amount"
+                    type="number"
+                    step="any"
+                    value={editAmount}
+                    onChange={(e) => setEditAmount(e.target.value)}
+                    className="bg-background border-border/50"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-price">Avg Buy Price ($)</Label>
+                  <Input
+                    id="edit-price"
+                    type="number"
+                    step="any"
+                    value={editPrice}
+                    onChange={(e) => setEditPrice(e.target.value)}
+                    className="bg-background border-border/50"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleUpdate}
+                  className="bg-gradient-primary"
+                >
+                  Save
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsEditing(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Holdings</p>
+                <p className="font-medium text-foreground">{item.amount.toFixed(6)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Current Price</p>
+                <p className="font-medium text-foreground">${item.currentPrice.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Current Value</p>
+                <p className="font-semibold text-foreground">${currentValue.toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">P&L</p>
+                <div className="flex items-center gap-1">
+                  {isProfit ? (
+                    <TrendingUp className="w-4 h-4 text-crypto-gain" />
+                  ) : (
+                    <TrendingDown className="w-4 h-4 text-crypto-loss" />
+                  )}
+                  <div className="text-sm">
+                    <p className={`font-medium ${isProfit ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
+                      {isProfit ? '+' : ''}${Math.abs(profit).toLocaleString()}
+                    </p>
+                    <p className={`text-xs ${isProfit ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
+                      {isProfit ? '+' : ''}{profitPercentage.toFixed(2)}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+export default function Portfolio() {
+  const { user } = useAuth();
+  const { 
+    portfolio, 
+    isLoading, 
+    addToPortfolio, 
+    removeFromPortfolio, 
+    updatePortfolioItem 
+  } = useSupabasePortfolio();
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  const totalValue = portfolio.reduce((sum, item) => sum + (item.amount * item.currentPrice), 0);
+  const totalInvested = portfolio.reduce((sum, item) => sum + (item.amount * item.avg_buy_price), 0);
   const totalProfit = totalValue - totalInvested;
   const totalProfitPercentage = totalInvested > 0 ? ((totalValue - totalInvested) / totalInvested) * 100 : 0;
 
@@ -327,7 +346,7 @@ export default function Portfolio() {
             Track your cryptocurrency investments
           </p>
         </div>
-        <AddAssetDialog onAdd={addAsset} />
+        <AddAssetDialog onAdd={addToPortfolio} />
       </motion.div>
 
       {/* Portfolio Summary */}
@@ -363,10 +382,10 @@ export default function Portfolio() {
                   )}
                   <div>
                     <p className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
-                      ${Math.abs(totalProfit).toLocaleString()}
+                      {totalProfit >= 0 ? '+' : ''}${Math.abs(totalProfit).toLocaleString()}
                     </p>
                     <p className={`text-sm ${totalProfit >= 0 ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
-                      {totalProfitPercentage.toFixed(2)}%
+                      {totalProfit >= 0 ? '+' : ''}{totalProfitPercentage.toFixed(2)}%
                     </p>
                   </div>
                 </div>
@@ -382,7 +401,14 @@ export default function Portfolio() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
       >
-        {portfolioWithPrices.length === 0 ? (
+        {isLoading ? (
+          <Card className="bg-gradient-card border-border/50">
+            <CardContent className="p-12 text-center">
+              <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+              <p className="text-muted-foreground">Loading portfolio...</p>
+            </CardContent>
+          </Card>
+        ) : portfolio.length === 0 ? (
           <Card className="bg-gradient-card border-border/50">
             <CardContent className="p-12 text-center">
               <PieChart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
@@ -390,16 +416,17 @@ export default function Portfolio() {
               <p className="text-muted-foreground mb-6">
                 Add your first cryptocurrency to start tracking your investments
               </p>
-              <AddAssetDialog onAdd={addAsset} />
+              <AddAssetDialog onAdd={addToPortfolio} />
             </CardContent>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {portfolioWithPrices.map((item) => (
+            {portfolio.map((item) => (
               <PortfolioItemCard
                 key={item.id}
                 item={item}
-                onRemove={removeAsset}
+                onRemove={removeFromPortfolio}
+                onUpdate={updatePortfolioItem}
               />
             ))}
           </div>

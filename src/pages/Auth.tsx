@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 
@@ -17,7 +17,6 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
 
   const { signIn, signUp, user, loading } = useAuth();
-  const { toast } = useToast();
 
   // Redirect if already authenticated
   if (loading) {
@@ -34,7 +33,15 @@ export default function Auth() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!email || !password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -43,17 +50,34 @@ export default function Auth() {
         : await signUp(email, password);
 
       if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
+        // Handle specific Supabase auth errors
+        let errorMessage = error.message;
+        
+        if (error.message.includes('Invalid login credentials')) {
+          errorMessage = "Invalid email or password. Please check your credentials.";
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = "Please check your email and click the confirmation link before signing in.";
+        } else if (error.message.includes('Password should be at least')) {
+          errorMessage = "Password must be at least 6 characters long.";
+        } else if (error.message.includes('Unable to validate email address')) {
+          errorMessage = "Please enter a valid email address.";
+        } else if (error.message.includes('User already registered')) {
+          errorMessage = "An account with this email already exists. Try signing in instead.";
+        } else if (error.message.includes('Too many requests')) {
+          errorMessage = "Too many attempts. Please wait a moment before trying again.";
+        }
+
+        toast.error(errorMessage);
       } else if (!isLogin) {
-        toast({
-          title: "Success",
-          description: "Check your email for the confirmation link!",
-        });
+        // Check if email confirmation is enabled
+        toast.success("Account created successfully! Check your email for confirmation if required.");
+      } else {
+        // Successful login - redirect will happen automatically via useAuth
+        toast.success("Welcome back!");
       }
+    } catch (error) {
+      console.error('Auth error:', error);
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -78,7 +102,7 @@ export default function Auth() {
               <TrendingUp className="w-8 h-8 text-white" />
             </motion.div>
             <CardTitle className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              {isLogin ? "Welcome Back" : "Join CryptoTracker"}
+              {isLogin ? "Welcome Back" : "Join CryptoVault"}
             </CardTitle>
             <p className="text-muted-foreground">
               {isLogin ? "Sign in to your account" : "Create your account"}
@@ -111,6 +135,7 @@ export default function Auth() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="bg-background border-border/50 focus:border-primary pr-10"
                     required
+                    minLength={6}
                   />
                   <Button
                     type="button"
@@ -122,6 +147,11 @@ export default function Auth() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
+                {!isLogin && (
+                  <p className="text-xs text-muted-foreground">
+                    Password must be at least 6 characters long
+                  </p>
+                )}
               </div>
 
               <Button
