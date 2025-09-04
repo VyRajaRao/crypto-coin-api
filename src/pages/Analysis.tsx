@@ -4,6 +4,7 @@ import { BarChart3, PieChart, Target, TrendingUp, DollarSign, Percent, AlertTria
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
+<<<<<<< HEAD
 import { supabase } from "@/lib/supabase";
 import { coinGeckoApi, type CoinData } from "@/services/coinGeckoApi";
 import { toast } from "sonner";
@@ -40,14 +41,23 @@ export default function Analysis() {
   const [totalProfit, setTotalProfit] = useState(0);
   const [portfolioIndicators, setPortfolioIndicators] = useState<Map<string, { indicators: TechnicalIndicators; analysis: IndicatorAnalysis }>>(new Map());
   const [insights, setInsights] = useState<Array<{ type: 'warning' | 'success' | 'info'; message: string; icon: any }>>([]);
+=======
+import { useSupabasePortfolio } from "@/hooks/useSupabasePortfolio";
+import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { Navigate } from "react-router-dom";
 
-  useEffect(() => {
-    const fetchPortfolioAnalysis = async () => {
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--secondary))', 'hsl(var(--muted))', '#8b5cf6', '#06d6a0', '#f72585', '#4cc9f0'];
 
+export default function Analysis() {
+  const { user } = useAuth();
+  const { portfolio, isLoading } = useSupabasePortfolio();
+>>>>>>> e553f2a3d127e565dfef64223f456de50c1b2885
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+<<<<<<< HEAD
       try {
         // Fetch user's portfolio from Supabase
         const { data: portfolioData, error } = await supabase
@@ -115,6 +125,12 @@ export default function Analysis() {
 
     fetchPortfolioAnalysis();
   }, [user]);
+=======
+  const totalValue = portfolio.reduce((sum, item) => sum + (item.amount * item.currentPrice), 0);
+  const totalInvested = portfolio.reduce((sum, item) => sum + (item.amount * item.avg_buy_price), 0);
+  const totalProfit = totalValue - totalInvested;
+  const totalProfitPercentage = totalInvested > 0 ? (totalProfit / totalInvested) * 100 : 0;
+>>>>>>> e553f2a3d127e565dfef64223f456de50c1b2885
 
   const calculateTechnicalAnalysis = async (portfolioItems: EnrichedPortfolioItem[]) => {
     const indicatorsMap = new Map();
@@ -231,27 +247,31 @@ export default function Analysis() {
   // Prepare chart data
   const pieChartData = portfolio.map((item, index) => ({
     name: item.name,
-    value: item.currentValue,
-    percentage: totalValue > 0 ? ((item.currentValue / totalValue) * 100).toFixed(1) : 0,
+    value: item.amount * item.currentPrice,
+    percentage: totalValue > 0 ? (((item.amount * item.currentPrice) / totalValue) * 100).toFixed(1) : 0,
     color: COLORS[index % COLORS.length]
   }));
 
+<<<<<<< HEAD
   const barChartData = portfolio.map(item => ({
     name: item.symbol.toUpperCase(),
     profit: item.profit,
     profitPercentage: item.profitPercentage
   }));
+=======
+  const barChartData = portfolio.map(item => {
+    const currentValue = item.amount * item.currentPrice;
+    const investedValue = item.amount * item.avg_buy_price;
+    const profit = currentValue - investedValue;
+    const profitPercentage = investedValue > 0 ? (profit / investedValue) * 100 : 0;
+>>>>>>> e553f2a3d127e565dfef64223f456de50c1b2885
 
-  const totalProfitPercentage = totalInvested > 0 ? (totalProfit / totalInvested) * 100 : 0;
-
-  if (!user) {
-    return (
-      <div className="text-center py-12">
-        <h2 className="text-xl font-semibold mb-4">Authentication Required</h2>
-        <p className="text-muted-foreground">Please sign in to view your portfolio analysis.</p>
-      </div>
-    );
-  }
+    return {
+      name: item.asset_symbol.toUpperCase(),
+      profit: profit,
+      profitPercentage: profitPercentage
+    };
+  });
 
   if (isLoading) {
     return (
@@ -334,7 +354,7 @@ export default function Analysis() {
               <div>
                 <p className="text-sm text-muted-foreground">Total P&L</p>
                 <p className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
-                  ${Math.abs(totalProfit).toLocaleString()}
+                  {totalProfit >= 0 ? '+' : ''}${Math.abs(totalProfit).toLocaleString()}
                 </p>
               </div>
             </div>
@@ -520,6 +540,7 @@ export default function Analysis() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+<<<<<<< HEAD
               {portfolio.map((item, index) => (
                 <motion.div
                   key={item.id}
@@ -570,22 +591,48 @@ export default function Analysis() {
                           })()}
                         </div>
                       )}
+=======
+              {portfolio.map((item, index) => {
+                const currentValue = item.amount * item.currentPrice;
+                const investedValue = item.amount * item.avg_buy_price;
+                const profit = currentValue - investedValue;
+                const profitPercentage = investedValue > 0 ? (profit / investedValue) * 100 : 0;
+
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 + index * 0.05 }}
+                    className="flex items-center justify-between p-4 rounded-lg bg-background/30 hover:bg-background/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      {item.image && (
+                        <img src={item.image} alt={item.name} className="w-10 h-10 rounded-full" />
+                      )}
+                      <div>
+                        <h4 className="font-medium">{item.name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {item.amount.toFixed(6)} {item.asset_symbol.toUpperCase()}
+                        </p>
+                      </div>
+>>>>>>> e553f2a3d127e565dfef64223f456de50c1b2885
                     </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <p className="font-medium">${item.currentValue.toLocaleString()}</p>
-                    <div className="flex items-center gap-2">
-                      <Badge 
-                        variant={item.profit >= 0 ? "default" : "destructive"}
-                        className={item.profit >= 0 ? "bg-crypto-gain text-white" : "bg-crypto-loss text-white"}
-                      >
-                        {item.profit >= 0 ? '+' : ''}{item.profitPercentage.toFixed(2)}%
-                      </Badge>
+                    
+                    <div className="text-right">
+                      <p className="font-medium">${currentValue.toLocaleString()}</p>
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant={profit >= 0 ? "default" : "destructive"}
+                          className={profit >= 0 ? "bg-crypto-gain text-white" : "bg-crypto-loss text-white"}
+                        >
+                          {profit >= 0 ? '+' : ''}{profitPercentage.toFixed(2)}%
+                        </Badge>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>

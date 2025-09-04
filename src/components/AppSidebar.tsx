@@ -43,13 +43,6 @@ export function AppSidebar() {
   const currentPath = location.pathname;
 
   const isActive = (path: string) => currentPath === path;
-  const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
-      isActive
-        ? "bg-gradient-primary text-primary-foreground shadow-neon"
-        : "hover:bg-secondary/50 hover:shadow-glow"
-    }`;
-
   const collapsed = state === "collapsed";
 
   return (
@@ -90,28 +83,20 @@ export function AppSidebar() {
             <SidebarMenu className="space-y-1">
               {navigationItems.map((item, index) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                     >
-                      <NavLink to={item.url} end className={getNavCls}>
-                        <item.icon
-                          className={`w-5 h-5 ${
-                            isActive(item.url)
-                              ? "text-primary-foreground"
-                              : "text-muted-foreground"
-                          }`}
-                        />
+                      <NavLink 
+                        to={item.url} 
+                        end 
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200"
+                      >
+                        <item.icon className="w-5 h-5" />
                         {!collapsed && (
-                          <span
-                            className={`font-medium ${
-                              isActive(item.url)
-                                ? "text-primary-foreground"
-                                : "text-sidebar-foreground"
-                            }`}
-                          >
+                          <span className="font-medium">
                             {item.title}
                           </span>
                         )}
@@ -140,7 +125,10 @@ export function AppSidebar() {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3, delay: 0.3 + index * 0.05 }}
                       >
-                        <NavLink to={item.url} className={getNavCls}>
+                        <NavLink 
+                          to={item.url} 
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200"
+                        >
                           <item.icon className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm text-sidebar-foreground">
                             {item.title}
