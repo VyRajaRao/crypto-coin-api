@@ -268,7 +268,7 @@ export default function Portfolio() {
 
       setIsLoading(true);
       try {
-        const coinIds = portfolio.map(item => item.coinId).join(',');
+        // Get current prices from Supabase portfolio or fetch from API
         const coinsData = await cryptoApi.getCoins('usd', 250);
         
         const updatedPortfolio = portfolio.map(item => {
