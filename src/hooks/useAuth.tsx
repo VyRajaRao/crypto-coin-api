@@ -1,12 +1,7 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-<<<<<<< HEAD
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-=======
-import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
->>>>>>> e553f2a3d127e565dfef64223f456de50c1b2885
 
 interface AuthContextType {
   user: User | null;
@@ -33,7 +28,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Listen for auth changes
-<<<<<<< HEAD
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -60,39 +54,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     });
-=======
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-
-        // Handle successful sign in
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Create or update user profile
-          try {
-            const { error } = await supabase
-              .from('profiles')
-              .upsert({
-                id: session.user.id,
-                email: session.user.email,
-              });
-            
-            if (error) {
-              console.error('Error creating/updating profile:', error);
-            }
-          } catch (error) {
-            console.error('Profile creation error:', error);
-          }
-        }
-      }
-    );
->>>>>>> e553f2a3d127e565dfef64223f456de50c1b2885
 
     return () => subscription.unsubscribe();
   }, []);
 
-<<<<<<< HEAD
   const signIn = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -130,30 +95,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const { data, error } = await supabase.auth.signUp({
-=======
-  const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      return { error };
-    } catch (error) {
-      return { error };
-    }
-  };
-
-  const signUp = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signUp({
->>>>>>> e553f2a3d127e565dfef64223f456de50c1b2885
         email,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`
         }
       });
-<<<<<<< HEAD
 
       if (error) {
         // Handle specific error types
@@ -185,26 +132,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Sign up error:', error);
       return { success: false, error: 'Network error. Please check your connection and try again.' };
-=======
-      return { error };
-    } catch (error) {
-      return { error };
->>>>>>> e553f2a3d127e565dfef64223f456de50c1b2885
     }
   };
 
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-<<<<<<< HEAD
       toast.success('Signed out successfully');
     } catch (error) {
       console.error('Sign out error:', error);
       toast.error('Error signing out');
-=======
-    } catch (error) {
-      console.error('Sign out error:', error);
->>>>>>> e553f2a3d127e565dfef64223f456de50c1b2885
     }
   };
 
