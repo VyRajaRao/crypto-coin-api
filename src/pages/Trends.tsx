@@ -59,7 +59,7 @@ export default function Trends() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+      <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-4 sm:px-6 pb-4 sm:pb-6">
         <div className="text-center py-8 sm:py-12">
           <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
           <p className="text-muted-foreground text-sm sm:text-base">Loading market trends...</p>
@@ -69,18 +69,18 @@ export default function Trends() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-4 sm:px-6 pb-4 sm:pb-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
       >
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1 pr-2">
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Market Trends
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base pr-2">
             Discover trending coins and market movers
           </p>
         </div>

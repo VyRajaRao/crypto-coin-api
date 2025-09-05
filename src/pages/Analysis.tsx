@@ -148,13 +148,13 @@ export default function Analysis() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+      <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-4 sm:px-6 pb-4 sm:pb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <div className="min-w-0 flex-1 pr-2">
+            <h1 className="responsive-title bg-gradient-primary bg-clip-text text-transparent">
               Portfolio Analysis
             </h1>
-            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+            <p className="responsive-small text-muted-foreground mt-1 pr-2">
               Loading your portfolio insights...
             </p>
           </div>
@@ -171,13 +171,13 @@ export default function Analysis() {
 
   if (!portfolio || portfolio.length === 0) {
     return (
-      <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+      <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-4 sm:px-6 pb-4 sm:pb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+          <div className="min-w-0 flex-1 pr-2">
+            <h1 className="responsive-title bg-gradient-primary bg-clip-text text-transparent">
               Portfolio Analysis
             </h1>
-            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+            <p className="responsive-small text-muted-foreground mt-1 pr-2">
               No portfolio data to analyze
             </p>
           </div>
@@ -185,10 +185,10 @@ export default function Analysis() {
         <Card className="bg-gradient-card border-border/50">
           <CardContent className="p-8 sm:p-12 text-center">
             <BarChart3 className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
+            <h3 className="responsive-heading text-foreground mb-2">
               No Portfolio Data
             </h3>
-            <p className="text-muted-foreground mb-6 text-sm sm:text-base">
+            <p className="responsive-body text-muted-foreground mb-6">
               Add some assets to your portfolio to see detailed analysis and insights.
             </p>
             <Button
@@ -204,24 +204,24 @@ export default function Analysis() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+    <div className="container-mobile max-w-full space-y-3 sm:space-y-4 lg:space-y-6 pb-4 portrait:space-y-3 landscape:space-y-2">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
       >
-        <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Portfolio Analysis
+        <div className="min-w-0 flex-1">
+          <h1 className="responsive-title bg-gradient-primary bg-clip-text text-transparent">
+            📊 Portfolio Analysis
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            Deep insights into your cryptocurrency investments
+          <p className="responsive-small text-muted-foreground mt-1">
+            Deep insights into your investments
           </p>
         </div>
         <div className="flex gap-2 shrink-0">
-          <Badge variant="secondary" className="bg-primary/10 text-primary">
+          <Badge variant="secondary" className="bg-primary/10 text-primary responsive-caption">
             {portfolio.length} Assets
           </Badge>
         </div>
@@ -234,39 +234,39 @@ export default function Analysis() {
         transition={{ duration: 0.3, delay: 0.1 }}
       >
         <Card className="bg-gradient-card border-border/50">
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-              <DollarSign className="w-5 h-5 text-primary" />
-              Performance Overview
+          <CardHeader className="px-3 py-2 sm:px-4 sm:py-3">
+            <CardTitle className="card-title-responsive flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-primary" />
+              💰 Performance Overview
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4 sm:p-6 pt-0">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-              <div className="text-center p-4 sm:p-0">
-                <p className="text-xs sm:text-sm text-muted-foreground">Total Value</p>
-                <p className="text-xl sm:text-2xl font-bold text-foreground">
+          <CardContent className="px-3 py-2 sm:px-4 sm:py-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="text-center p-2">
+                <p className="responsive-caption text-muted-foreground">Total Value</p>
+                <p className="responsive-heading font-bold text-foreground">
                   ${totalValue.toLocaleString()}
                 </p>
               </div>
-              <div className="text-center p-4 sm:p-0">
-                <p className="text-xs sm:text-sm text-muted-foreground">Total Invested</p>
-                <p className="text-xl sm:text-2xl font-bold text-foreground">
+              <div className="text-center p-2">
+                <p className="responsive-caption text-muted-foreground">Total Invested</p>
+                <p className="responsive-heading font-bold text-foreground">
                   ${totalInvested.toLocaleString()}
                 </p>
               </div>
-              <div className="text-center p-4 sm:p-0">
-                <p className="text-xs sm:text-sm text-muted-foreground">Total P&L</p>
+              <div className="text-center p-2">
+                <p className="responsive-caption text-muted-foreground">Total P&L</p>
                 <div className="flex items-center justify-center gap-2">
                   {totalProfit >= 0 ? (
-                    <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-crypto-gain" />
+                    <TrendingUp className="w-4 h-4 text-crypto-gain" />
                   ) : (
-                    <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 text-crypto-loss" />
+                    <TrendingDown className="w-4 h-4 text-crypto-loss" />
                   )}
                   <div>
-                    <p className={`text-lg sm:text-2xl font-bold ${totalProfit >= 0 ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
+                    <p className={`responsive-subheading font-bold ${totalProfit >= 0 ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
                       {totalProfit >= 0 ? '+' : ''}${Math.abs(totalProfit).toLocaleString()}
                     </p>
-                    <p className={`text-xs sm:text-sm ${totalProfit >= 0 ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
+                    <p className={`responsive-caption ${totalProfit >= 0 ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
                       {totalProfit >= 0 ? '+' : ''}{totalProfitPercentage.toFixed(2)}%
                     </p>
                   </div>
@@ -284,20 +284,20 @@ export default function Analysis() {
         transition={{ duration: 0.3, delay: 0.2 }}
       >
         <Card className="bg-gradient-card border-border/50">
-          <CardHeader className="p-4 sm:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                <BarChart3 className="w-5 h-5 text-primary" />
-                Portfolio Visualization
+          <CardHeader className="px-3 py-2 sm:px-4 sm:py-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <CardTitle className="card-title-responsive flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-primary" />
+                📈 Visualization
               </CardTitle>
               <div className="flex gap-2">
                 <Button
                   variant={activeChart === 'pie' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setActiveChart('pie')}
-                  className="touch-manipulation"
+                  className="touch-target responsive-caption"
                 >
-                  <PieChart className="w-4 h-4 mr-1 sm:mr-2" />
+                  <PieChart className="w-4 h-4 mr-1" />
                   <span className="hidden sm:inline">Distribution</span>
                   <span className="sm:hidden">Dist</span>
                 </Button>
@@ -305,17 +305,17 @@ export default function Analysis() {
                   variant={activeChart === 'bar' ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setActiveChart('bar')}
-                  className="touch-manipulation"
+                  className="touch-target responsive-caption"
                 >
-                  <BarChart3 className="w-4 h-4 mr-1 sm:mr-2" />
+                  <BarChart3 className="w-4 h-4 mr-1" />
                   <span className="hidden sm:inline">Performance</span>
                   <span className="sm:hidden">P&L</span>
                 </Button>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-4 sm:p-6 pt-0">
-            <div className="h-64 sm:h-80 lg:h-96 w-full touch-manipulation">
+          <CardContent className="px-3 py-2 sm:px-4 sm:py-3">
+            <div className="h-48 sm:h-64 lg:h-80 w-full touch-manipulation">
               <ResponsiveContainer width="100%" height="100%">
                 {activeChart === 'pie' ? (
                   <RechartsPieChart>
@@ -371,20 +371,20 @@ export default function Analysis() {
           transition={{ duration: 0.3, delay: 0.3 }}
         >
           <Card className="bg-gradient-card border-border/50">
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                <Activity className="w-5 h-5 text-primary" />
-                Portfolio Insights
+            <CardHeader className="px-3 py-2 sm:px-4 sm:py-3">
+              <CardTitle className="card-title-responsive flex items-center gap-2">
+                <Activity className="w-4 h-4 text-primary" />
+                📊 Insights
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
-              <div className="space-y-3">
+            <CardContent className="px-3 py-2 sm:px-4 sm:py-3">
+              <div className="space-y-2">
                 {insights.map((insight, index) => {
                   const IconComponent = insight.icon;
                   return (
                     <div
                       key={index}
-                      className={`flex items-center gap-3 p-3 rounded-lg border ${
+                      className={`flex items-center gap-3 p-2 sm:p-3 rounded-lg border ${
                         insight.type === 'success' 
                           ? 'bg-crypto-gain/10 border-crypto-gain/20 text-crypto-gain' 
                           : insight.type === 'warning'
@@ -392,8 +392,8 @@ export default function Analysis() {
                           : 'bg-primary/10 border-primary/20 text-primary'
                       }`}
                     >
-                      <IconComponent className="w-5 h-5 shrink-0" />
-                      <p className="text-sm sm:text-base font-medium">{insight.message}</p>
+                      <IconComponent className="w-4 h-4 shrink-0" />
+                      <p className="responsive-small font-medium">{insight.message}</p>
                     </div>
                   );
                 })}

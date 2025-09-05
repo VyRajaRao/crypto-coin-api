@@ -41,7 +41,7 @@ export function Layout({ children }: LayoutProps) {
   if (loading) {
     return (
       <div 
-        className="min-h-screen flex items-center justify-center bg-background"
+        className="min-h-screen error-state-mobile bg-background"
         role="status"
         aria-live="polite"
         aria-label={ARIA_LABELS.loading}
@@ -79,14 +79,14 @@ export function Layout({ children }: LayoutProps) {
       </a>
       
       <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-background">
+        <div className="min-h-screen flex w-full bg-background touch-optimized">
           <AppSidebar />
           
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col mobile-safe-area">
             {/* Header */}
             <motion.header
               {...motionSettings}
-              className="h-14 sm:h-16 flex items-center justify-between px-3 sm:px-6 border-b border-border/50 bg-card/30 backdrop-blur-sm sticky top-0 z-50 pt-safe-top"
+              className="h-14 sm:h-16 flex items-center justify-between container-mobile border-b border-border/50 bg-card/30 backdrop-blur-sm sticky top-0 z-50 mobile-safe-area landscape:h-12"
               role="banner"
             >
               <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
@@ -164,7 +164,7 @@ export function Layout({ children }: LayoutProps) {
             {/* Main Content */}
             <main 
               id="main-content"
-              className="flex-1 overflow-auto scrollbar-thin overscroll-contain"
+              className="flex-1 overflow-auto mobile-scrollable overscroll-contain landscape:overflow-y-auto"
               role="main"
               tabIndex={-1}
             >
@@ -173,7 +173,7 @@ export function Layout({ children }: LayoutProps) {
                   { initial: {}, animate: {}, transition: { duration: 0 } } :
                   { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.4, delay: 0.1 } }
                 )}
-                className="p-3 sm:p-4 lg:p-6 pb-safe pl-safe-left pr-safe-right"
+                className="mobile-safe-area portrait:py-2 landscape:py-1"
               >
                 {children}
               </motion.div>

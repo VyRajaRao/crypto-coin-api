@@ -318,25 +318,25 @@ export default function LiveTrading() {
 
   if (!user) {
     return (
-      <div className="text-center py-8 sm:py-12 px-4">
-        <Activity className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mx-auto mb-4" />
-        <h2 className="text-lg sm:text-xl font-semibold mb-4">Authentication Required</h2>
-        <p className="text-sm sm:text-base text-muted-foreground">Please sign in to access the trading simulator.</p>
+      <div className="error-state-mobile">
+        <Activity className="error-icon-mobile text-muted-foreground" />
+        <h2 className="error-title-mobile">Authentication Required</h2>
+        <p className="error-message-mobile">Please sign in to access the trading simulator.</p>
       </div>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="text-center py-8 sm:py-12 px-4">
+      <div className="error-state-mobile">
         <div className="animate-spin w-6 h-6 sm:w-8 sm:h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-        <p className="text-sm sm:text-base text-muted-foreground">Initializing trading account...</p>
+        <p className="text-sm sm:text-base text-muted-foreground text-mobile-readable">Initializing trading account...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8 p-4 sm:p-6">
+    <div className="container-mobile max-w-full space-y-3 sm:space-y-4 lg:space-y-6 pb-4 portrait:space-y-3 landscape:space-y-2">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -344,11 +344,11 @@ export default function LiveTrading() {
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
       >
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-            Live Trading
+          <h1 className="responsive-title bg-gradient-primary bg-clip-text text-transparent">
+            💹 Live Trading
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            Practice trading with simulated orders and real market data
+          <p className="responsive-small text-muted-foreground mt-1">
+            Practice trading with real market data
           </p>
         </div>
         <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-wrap">
@@ -369,7 +369,7 @@ export default function LiveTrading() {
         transition={{ delay: 0.1 }}
       >
         <Card className="bg-gradient-card border-border/50">
-          <CardContent className="p-4 sm:p-6">
+          <CardContent className="card-mobile-content">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               <div className="flex-1 min-w-0">
                 <SearchBar onCoinSelect={handleCoinSelect} />
@@ -410,12 +410,12 @@ export default function LiveTrading() {
             className="xl:col-span-1 order-1 xl:order-1"
           >
             <Card className="bg-gradient-card border-border/50">
-              <CardHeader className="p-4 sm:p-6">
+              <CardHeader className="card-mobile-header">
                 <CardTitle className="text-lg sm:text-xl">Trade {selectedCoin.symbol.toUpperCase()}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 p-4 sm:p-6">
+              <CardContent className="card-mobile-content space-y-4">
                 <Tabs value={tradeType} onValueChange={(value) => setTradeType(value as 'buy' | 'sell')}>
-                  <TabsList className="grid w-full grid-cols-2 touch-target">
+                  <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="buy" className="text-crypto-gain data-[state=active]:bg-crypto-gain/20 touch-target">
                       Buy
                     </TabsTrigger>
@@ -499,14 +499,14 @@ export default function LiveTrading() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Order Book */}
               <Card className="bg-gradient-card border-border/50">
-                <CardHeader className="p-4 sm:p-6">
+                <CardHeader className="card-mobile-header">
                   <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                     <Target className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                     Order Book
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="max-h-80 sm:max-h-96 overflow-y-auto">
+                  <div className="max-h-80 sm:max-h-96 overflow-y-auto mobile-scrollable landscape:max-h-60">
                     {/* Asks */}
                     <div className="p-3 sm:p-4">
                       <h4 className="text-xs sm:text-sm font-medium text-crypto-loss mb-2">Asks (Sell Orders)</h4>
@@ -547,14 +547,14 @@ export default function LiveTrading() {
 
               {/* Recent Trades */}
               <Card className="bg-gradient-card border-border/50">
-                <CardHeader className="p-4 sm:p-6">
+                <CardHeader className="card-mobile-header">
                   <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
                     <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                     Recent Trades
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="max-h-80 sm:max-h-96 overflow-y-auto p-3 sm:p-4">
+                  <div className="max-h-80 sm:max-h-96 overflow-y-auto mobile-scrollable landscape:max-h-60 card-mobile-content">
                     <div className="space-y-2">
                       {recentTrades.map((trade) => (
                         <div key={trade.id} className="grid grid-cols-3 gap-2 text-xs">
@@ -583,18 +583,18 @@ export default function LiveTrading() {
         transition={{ delay: 0.4 }}
       >
         <Card className="bg-gradient-card border-border/50">
-          <CardHeader className="p-4 sm:p-6">
+          <CardHeader className="card-mobile-header">
             <CardTitle className="text-lg sm:text-xl">Your Trading History</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {trades.length === 0 ? (
-              <div className="text-center py-8 sm:py-12 px-4">
-                <Activity className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-base sm:text-lg font-semibold mb-2">No Trades Yet</h3>
-                <p className="text-sm sm:text-base text-muted-foreground">Start trading to see your history here.</p>
+              <div className="error-state-mobile">
+                <Activity className="error-icon-mobile text-muted-foreground" />
+                <h3 className="error-title-mobile">No Trades Yet</h3>
+                <p className="error-message-mobile">Start trading to see your history here.</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="table-wrapper-mobile mobile-scrollable">
                 <table className="w-full min-w-[600px]">
                   <thead className="bg-muted/30">
                     <tr>

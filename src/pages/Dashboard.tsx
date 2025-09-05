@@ -218,13 +218,13 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+      <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-4 sm:px-6 pb-4 sm:pb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1 pr-2">
             <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               Market Dashboard
             </h1>
-            <p className="text-muted-foreground mt-1 text-sm sm:text-base">Failed to load market data</p>
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base pr-2">Failed to load market data</p>
           </div>
         </div>
         <Card className="bg-gradient-card border-border/50 p-6 sm:p-8 text-center">
@@ -239,7 +239,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-4 sm:px-6 pb-4 sm:pb-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -247,11 +247,11 @@ export default function Dashboard() {
         transition={{ duration: 0.3 }}
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
       >
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1 pr-2">
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Market Dashboard
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base pr-2">
             Real-time cryptocurrency market data and insights
           </p>
         </div>

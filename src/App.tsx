@@ -4,8 +4,9 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Layout } from "@/components/Layout";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import "@/styles/mobile-utils.css";
 
 // Lazy load pages for better performance
 const Index = lazy(() => import("@/pages/Index"));
@@ -33,12 +34,49 @@ const queryClient = new QueryClient({
 });
 
 function App() {
+  useEffect(() => {
+    // Add mobile optimization class to body
+    document.body.classList.add('mobile-optimized');
+    
+    // Add viewport meta tag if it doesn't exist
+    if (!document.querySelector('meta[name="viewport"]')) {
+      const viewport = document.createElement('meta');
+      viewport.name = 'viewport';
+      viewport.content = 'width=device-width, initial-scale=1, viewport-fit=cover';
+      document.head.appendChild(viewport);
+    }
+    
+    // Prevent zoom on input focus for iOS
+    const inputs = document.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+      input.addEventListener('focus', () => {
+        if (window.innerWidth < 768) {
+          const viewport = document.querySelector('meta[name="viewport"]');
+          if (viewport) {
+            viewport.setAttribute('content', 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover');
+          }
+        }
+      });
+      
+      input.addEventListener('blur', () => {
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+          viewport.setAttribute('content', 'width=device-width, initial-scale=1, viewport-fit=cover');
+        }
+      });
+    });
+    
+    return () => {
+      document.body.classList.remove('mobile-optimized');
+    };
+  }, []);
+  
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <Router>
-            <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><LoadingSpinner message="Loading application..." /></div>}>
+            <Suspense fallback={<div className="min-h-screen error-state-mobile"><LoadingSpinner message="Loading application..." /></div>}>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
@@ -46,7 +84,7 @@ function App() {
                   path="/*"
                   element={
                     <Layout>
-                      <Suspense fallback={<LoadingSpinner message="Loading page..." />}>
+                      <Suspense fallback={<div className="error-state-mobile"><LoadingSpinner message="Loading page..." /></div>}>
                         <Routes>
                           <Route path="/dashboard" element={<Dashboard />} />
                           <Route path="/portfolio" element={<IntegratedPortfolio />} />

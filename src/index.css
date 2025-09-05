@@ -867,4 +867,234 @@
   .fill-chart-4 { fill: hsl(var(--crypto-loss)); }
   .fill-chart-5 { fill: hsl(var(--neon-pink)); }
   .fill-chart-6 { fill: hsl(var(--neon-blue)); }
+
+  /* Enhanced mobile spacing utilities */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px] touch-manipulation;
+  }
+
+  /* Mobile-safe containers */
+  .container-mobile {
+    @apply px-4 sm:px-6 max-w-full;
+  }
+
+  /* Enhanced card mobile padding */
+  .card-mobile-padded {
+    @apply p-4 sm:p-6;
+  }
+
+  .card-mobile-header {
+    @apply px-4 sm:px-6 py-3 sm:py-4;
+  }
+
+  .card-mobile-content {
+    @apply px-4 sm:px-6 pb-4 sm:pb-6;
+  }
+
+  /* Mobile-friendly text spacing */
+  .text-mobile-readable {
+    @apply leading-relaxed px-2;
+  }
+
+  /* Error state mobile styling */
+  .error-state-mobile {
+    @apply flex flex-col items-center justify-center px-6 py-8 text-center min-h-[300px];
+  }
+
+  .error-icon-mobile {
+    @apply w-16 h-16 mb-4;
+  }
+
+  .error-title-mobile {
+    @apply text-lg font-semibold mb-2;
+  }
+
+  .error-message-mobile {
+    @apply text-sm text-muted-foreground mb-6 max-w-sm leading-relaxed;
+  }
+
+  .retry-button-mobile {
+    @apply touch-target px-6 py-3;
+  }
+
+  /* Mobile scrollable table wrapper */
+  .table-wrapper-mobile {
+    @apply overflow-x-auto -mx-4 sm:-mx-6;
+  }
+
+  .table-wrapper-mobile table {
+    @apply min-w-[600px];
+  }
+
+  /* Mobile grid improvements */
+  .mobile-grid-safe {
+    @apply grid gap-3 sm:gap-4 px-4 sm:px-0;
+  }
+}
+
+/* Portrait/landscape specific utilities */
+@media (orientation: portrait) {
+  .portrait\:px-4 { @apply px-4; }
+  .portrait\:py-2 { @apply py-2; }
+  .portrait\:space-y-4 > * + * { @apply mt-4; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .landscape\:py-1 { @apply py-1; }
+  .landscape\:space-y-2 > * + * { @apply mt-2; }
+  .landscape\:text-sm { @apply text-sm; }
+}
+
+/* High contrast mobile */
+@media (prefers-contrast: high) {
+  .mobile-text-readable {
+    color: hsl(var(--foreground));
+  }
+  
+  .mobile-border {
+    border-color: hsl(var(--foreground));
+  }
+}
+
+/* Unified Responsive Font System */
+
+/* Base mobile typography */
+.responsive-title {
+  @apply text-2xl sm:text-3xl lg:text-4xl font-bold;
+}
+
+.responsive-heading {
+  @apply text-lg sm:text-xl lg:text-2xl font-semibold;
+}
+
+.responsive-subheading {
+  @apply text-base sm:text-lg lg:text-xl font-medium;
+}
+
+.responsive-body {
+  @apply text-sm sm:text-base lg:text-lg;
+}
+
+.responsive-small {
+  @apply text-xs sm:text-sm lg:text-base;
+}
+
+.responsive-caption {
+  @apply text-xs sm:text-xs lg:text-sm;
+}
+
+/* Portrait mobile orientation */
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .responsive-title {
+    @apply text-xl font-bold leading-tight;
+  }
+  
+  .responsive-heading {
+    @apply text-lg font-semibold leading-tight;
+  }
+  
+  .responsive-subheading {
+    @apply text-base font-medium leading-snug;
+  }
+  
+  .responsive-body {
+    @apply text-sm leading-relaxed;
+  }
+  
+  .responsive-small {
+    @apply text-xs leading-normal;
+  }
+  
+  .responsive-caption {
+    @apply text-xs leading-tight;
+  }
+  
+  .portrait-spacing {
+    @apply space-y-3;
+  }
+  
+  .portrait-padding {
+    @apply p-4;
+  }
+}
+
+/* Landscape mobile orientation - more compact */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+  .responsive-title {
+    @apply text-lg font-bold leading-tight;
+  }
+  
+  .responsive-heading {
+    @apply text-base font-semibold leading-tight;
+  }
+  
+  .responsive-subheading {
+    @apply text-sm font-medium leading-snug;
+  }
+  
+  .responsive-body {
+    @apply text-xs leading-snug;
+  }
+  
+  .responsive-small {
+    @apply text-xs leading-tight;
+  }
+  
+  .responsive-caption {
+    @apply text-xs leading-tight;
+  }
+  
+  .landscape-spacing {
+    @apply space-y-1;
+  }
+  
+  .landscape-card {
+    @apply p-2 m-1;
+  }
+  
+  .landscape-button {
+    @apply min-h-[36px] px-3 py-1 text-xs;
+  }
+}
+
+/* Enhanced mobile classes */
+@media screen and (max-width: 768px) {
+  .mobile-card {
+    @apply rounded-lg;
+  }
+  
+  .mobile-button {
+    @apply min-h-[44px] px-4 py-2;
+  }
+  
+  /* Card content responsive sizing */
+  .card-title-responsive {
+    @apply responsive-heading;
+  }
+  
+  .card-description-responsive {
+    @apply responsive-small text-muted-foreground;
+  }
+  
+  .button-text-responsive {
+    @apply responsive-small;
+  }
+}
+
+/* Ensure proper viewport handling */
+@media screen and (max-width: 768px) {
+  .mobile-viewport {
+    width: 100vw;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  
+  .mobile-full {
+    @apply w-full min-w-0;
+  }
+  
+  .mobile-scroll {
+    @apply overflow-x-auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }

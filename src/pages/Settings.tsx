@@ -96,18 +96,18 @@ export default function Settings() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-4xl">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-4xl px-4 sm:px-6 pb-4 sm:pb-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
       >
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1 pr-2">
           <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Settings
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base pr-2">
             Manage your account and app preferences
           </p>
         </div>
