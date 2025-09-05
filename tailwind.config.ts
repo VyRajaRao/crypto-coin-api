@@ -10,21 +10,24 @@ export default {
 	],
 	prefix: "",
 	theme: {
-		screens: {
-			// Mobile-first responsive breakpoints
-			'xs': '375px',
-			'sm': '640px',
-			'md': '768px',
-			'lg': '1024px',
-			'xl': '1280px',
-			'2xl': '1536px',
-			// Touch-friendly breakpoints
-			'touch': { 'raw': '(hover: none) and (pointer: coarse)' },
-			'mouse': { 'raw': '(hover: hover) and (pointer: fine)' },
-			// Orientation breakpoints
-			'portrait': { 'raw': '(orientation: portrait)' },
-			'landscape': { 'raw': '(orientation: landscape)' }
-		},
+			screens: {
+				// Mobile-first responsive breakpoints
+				'xs': '375px',
+				'sm': '640px',
+				'md': '768px',
+				'lg': '1024px',
+				'xl': '1280px',
+				'2xl': '1536px',
+				// Touch-friendly breakpoints
+				'touch': { 'raw': '(hover: none) and (pointer: coarse)' },
+				'mouse': { 'raw': '(hover: hover) and (pointer: fine)' },
+				// Orientation breakpoints
+				'portrait': { 'raw': '(orientation: portrait)' },
+				'landscape': { 'raw': '(orientation: landscape)' },
+				// Landscape mobile optimizations
+				'landscape-sm': { 'raw': '(orientation: landscape) and (max-height: 640px)' },
+				'landscape-xs': { 'raw': '(orientation: landscape) and (max-height: 480px)' }
+			},
 		container: {
 			center: true,
 			padding: {
@@ -215,6 +218,12 @@ export default {
 			},
 			// Mobile-specific utilities
 			utilities: {
+				// Touch target utility for accessible tap areas
+				'.touch-target': {
+					'min-height': '44px',
+					'min-width': '44px',
+					'touch-action': 'manipulation'
+				},
 				// Touch manipulation
 				'.touch-manipulation': {
 					'touch-action': 'manipulation'
@@ -244,6 +253,34 @@ export default {
 					'z-index': '9999',
 					'&:focus': {
 						'top': '16px'
+					}
+				},
+				// Landscape mobile optimizations
+				'.landscape-optimized': {
+					'@media (orientation: landscape) and (max-height: 640px)': {
+						'padding-top': '0.5rem',
+						'padding-bottom': '0.5rem'
+					}
+				},
+				// Improved scrollable container
+				'.scrollable-container': {
+					'overflow': 'auto',
+					'-webkit-overflow-scrolling': 'touch',
+					'overscroll-behavior': 'contain',
+					'scrollbar-width': 'thin',
+					'&::-webkit-scrollbar': {
+						'width': '6px',
+						'height': '6px'
+					},
+					'&::-webkit-scrollbar-track': {
+						'background': 'transparent'
+					},
+					'&::-webkit-scrollbar-thumb': {
+						'background': 'hsl(var(--muted-foreground) / 0.3)',
+						'border-radius': '3px',
+						'&:hover': {
+							'background': 'hsl(var(--muted-foreground) / 0.5)'
+						}
 					}
 				}
 			}

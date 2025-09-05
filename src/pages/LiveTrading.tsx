@@ -318,46 +318,46 @@ export default function LiveTrading() {
 
   if (!user) {
     return (
-      <div className="text-center py-12">
-        <Activity className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-        <h2 className="text-xl font-semibold mb-4">Authentication Required</h2>
-        <p className="text-muted-foreground">Please sign in to access the trading simulator.</p>
+      <div className="text-center py-8 sm:py-12 px-4">
+        <Activity className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mx-auto mb-4" />
+        <h2 className="text-lg sm:text-xl font-semibold mb-4">Authentication Required</h2>
+        <p className="text-sm sm:text-base text-muted-foreground">Please sign in to access the trading simulator.</p>
       </div>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="text-center py-12">
-        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-        <p className="text-muted-foreground">Initializing trading account...</p>
+      <div className="text-center py-8 sm:py-12 px-4">
+        <div className="animate-spin w-6 h-6 sm:w-8 sm:h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+        <p className="text-sm sm:text-base text-muted-foreground">Initializing trading account...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8 p-4 sm:p-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Live Trading
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
             Practice trading with simulated orders and real market data
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <Badge variant="secondary" className="bg-crypto-gain/20 text-crypto-gain">
+        <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 flex-wrap">
+          <Badge variant="secondary" className="bg-crypto-gain/20 text-crypto-gain text-xs sm:text-sm">
             Virtual Trading
           </Badge>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-muted/30 rounded-lg px-3 py-2">
             <DollarSign className="w-4 h-4 text-primary" />
-            <span className="font-bold">${wallet?.balance.toLocaleString()}</span>
+            <span className="font-bold text-sm sm:text-base">${wallet?.balance.toLocaleString()}</span>
           </div>
         </div>
       </motion.div>
@@ -369,25 +369,27 @@ export default function LiveTrading() {
         transition={{ delay: 0.1 }}
       >
         <Card className="bg-gradient-card border-border/50">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <SearchBar onCoinSelect={handleCoinSelect} />
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex-1 min-w-0">
+                <SearchBar onCoinSelect={handleCoinSelect} />
+              </div>
               {selectedCoin && (
-                <div className="flex items-center gap-3">
-                  <img src={selectedCoin.image} alt={selectedCoin.name} className="w-8 h-8 rounded-full" />
-                  <div>
-                    <p className="font-medium">{selectedCoin.name}</p>
-                    <p className="text-sm text-muted-foreground">${selectedCoin.current_price.toLocaleString()}</p>
+                <div className="flex items-center gap-3 bg-muted/30 rounded-lg p-3">
+                  <img src={selectedCoin.image} alt={selectedCoin.name} className="w-8 h-8 rounded-full flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm sm:text-base truncate">{selectedCoin.name}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">${selectedCoin.current_price.toLocaleString()}</p>
                   </div>
-                  <div className={`flex items-center gap-1 ${
+                  <div className={`flex items-center gap-1 flex-shrink-0 ${
                     selectedCoin.price_change_percentage_24h >= 0 ? 'text-crypto-gain' : 'text-crypto-loss'
                   }`}>
                     {selectedCoin.price_change_percentage_24h >= 0 ? (
-                      <TrendingUp className="w-4 h-4" />
+                      <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
                     ) : (
-                      <TrendingDown className="w-4 h-4" />
+                      <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4" />
                     )}
-                    <span className="font-medium">
+                    <span className="font-medium text-xs sm:text-sm">
                       {selectedCoin.price_change_percentage_24h.toFixed(2)}%
                     </span>
                   </div>
@@ -399,34 +401,34 @@ export default function LiveTrading() {
       </motion.div>
 
       {selectedCoin && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
           {/* Trading Panel */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="lg:col-span-1"
+            className="xl:col-span-1 order-1 xl:order-1"
           >
             <Card className="bg-gradient-card border-border/50">
-              <CardHeader>
-                <CardTitle>Trade {selectedCoin.symbol.toUpperCase()}</CardTitle>
+              <CardHeader className="p-4 sm:p-6">
+                <CardTitle className="text-lg sm:text-xl">Trade {selectedCoin.symbol.toUpperCase()}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 p-4 sm:p-6">
                 <Tabs value={tradeType} onValueChange={(value) => setTradeType(value as 'buy' | 'sell')}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="buy" className="text-crypto-gain data-[state=active]:bg-crypto-gain/20">
+                  <TabsList className="grid w-full grid-cols-2 touch-target">
+                    <TabsTrigger value="buy" className="text-crypto-gain data-[state=active]:bg-crypto-gain/20 touch-target">
                       Buy
                     </TabsTrigger>
-                    <TabsTrigger value="sell" className="text-crypto-loss data-[state=active]:bg-crypto-loss/20">
+                    <TabsTrigger value="sell" className="text-crypto-loss data-[state=active]:bg-crypto-loss/20 touch-target">
                       Sell
                     </TabsTrigger>
                   </TabsList>
                 </Tabs>
 
-                <div>
+                <div className="space-y-2">
                   <label className="text-sm font-medium">Order Type</label>
                   <Select value={orderType} onValueChange={(value) => setOrderType(value as 'market' | 'limit')}>
-                    <SelectTrigger>
+                    <SelectTrigger className="touch-target">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -437,7 +439,7 @@ export default function LiveTrading() {
                 </div>
 
                 {orderType === 'limit' && (
-                  <div>
+                  <div className="space-y-2">
                     <label className="text-sm font-medium">Price (USD)</label>
                     <Input
                       type="number"
@@ -445,11 +447,12 @@ export default function LiveTrading() {
                       placeholder={selectedCoin.current_price.toString()}
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
+                      className="touch-target"
                     />
                   </div>
                 )}
 
-                <div>
+                <div className="space-y-2">
                   <label className="text-sm font-medium">Amount ({selectedCoin.symbol.toUpperCase()})</label>
                   <Input
                     type="number"
@@ -457,6 +460,7 @@ export default function LiveTrading() {
                     placeholder="0.0000"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
+                    className="touch-target"
                   />
                 </div>
 
@@ -471,7 +475,7 @@ export default function LiveTrading() {
 
                 <Button
                   onClick={executeTrade}
-                  className={`w-full ${
+                  className={`w-full touch-target ${
                     tradeType === 'buy' 
                       ? 'bg-crypto-gain hover:bg-crypto-gain/90' 
                       : 'bg-crypto-loss hover:bg-crypto-loss/90'
@@ -490,49 +494,49 @@ export default function LiveTrading() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="lg:col-span-2"
+            className="xl:col-span-2 order-2 xl:order-2"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Order Book */}
               <Card className="bg-gradient-card border-border/50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="w-5 h-5 text-primary" />
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                     Order Book
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="max-h-96 overflow-y-auto">
+                  <div className="max-h-80 sm:max-h-96 overflow-y-auto">
                     {/* Asks */}
-                    <div className="p-4">
-                      <h4 className="text-sm font-medium text-crypto-loss mb-2">Asks (Sell Orders)</h4>
+                    <div className="p-3 sm:p-4">
+                      <h4 className="text-xs sm:text-sm font-medium text-crypto-loss mb-2">Asks (Sell Orders)</h4>
                       <div className="space-y-1">
                         {orderBook.asks.slice().reverse().map((ask, index) => (
-                          <div key={index} className="flex justify-between text-xs">
-                            <span className="text-crypto-loss">${ask.price}</span>
-                            <span className="text-muted-foreground">{ask.amount}</span>
-                            <span className="text-muted-foreground">${ask.total}</span>
+                          <div key={index} className="grid grid-cols-3 gap-2 text-xs">
+                            <span className="text-crypto-loss truncate">${ask.price}</span>
+                            <span className="text-muted-foreground text-center truncate">{ask.amount}</span>
+                            <span className="text-muted-foreground text-right truncate">${ask.total}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    <div className="border-t border-border px-4 py-2">
+                    <div className="border-t border-border px-3 sm:px-4 py-2">
                       <div className="text-center">
-                        <span className="font-bold">${selectedCoin.current_price.toLocaleString()}</span>
-                        <span className="text-xs text-muted-foreground ml-2">Market Price</span>
+                        <div className="font-bold text-sm sm:text-base">${selectedCoin.current_price.toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">Market Price</div>
                       </div>
                     </div>
 
                     {/* Bids */}
-                    <div className="p-4">
-                      <h4 className="text-sm font-medium text-crypto-gain mb-2">Bids (Buy Orders)</h4>
+                    <div className="p-3 sm:p-4">
+                      <h4 className="text-xs sm:text-sm font-medium text-crypto-gain mb-2">Bids (Buy Orders)</h4>
                       <div className="space-y-1">
                         {orderBook.bids.map((bid, index) => (
-                          <div key={index} className="flex justify-between text-xs">
-                            <span className="text-crypto-gain">${bid.price}</span>
-                            <span className="text-muted-foreground">{bid.amount}</span>
-                            <span className="text-muted-foreground">${bid.total}</span>
+                          <div key={index} className="grid grid-cols-3 gap-2 text-xs">
+                            <span className="text-crypto-gain truncate">${bid.price}</span>
+                            <span className="text-muted-foreground text-center truncate">{bid.amount}</span>
+                            <span className="text-muted-foreground text-right truncate">${bid.total}</span>
                           </div>
                         ))}
                       </div>
@@ -543,23 +547,23 @@ export default function LiveTrading() {
 
               {/* Recent Trades */}
               <Card className="bg-gradient-card border-border/50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-primary" />
+                <CardHeader className="p-4 sm:p-6">
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                    <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                     Recent Trades
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  <div className="max-h-96 overflow-y-auto p-4">
+                  <div className="max-h-80 sm:max-h-96 overflow-y-auto p-3 sm:p-4">
                     <div className="space-y-2">
                       {recentTrades.map((trade) => (
-                        <div key={trade.id} className="flex justify-between text-xs">
-                          <span className={trade.type === 'buy' ? 'text-crypto-gain' : 'text-crypto-loss'}>
+                        <div key={trade.id} className="grid grid-cols-3 gap-2 text-xs">
+                          <span className={`truncate ${trade.type === 'buy' ? 'text-crypto-gain' : 'text-crypto-loss'}`}>
                             ${trade.price}
                           </span>
-                          <span className="text-muted-foreground">{trade.amount}</span>
-                          <span className="text-muted-foreground">
-                            {trade.timestamp.toLocaleTimeString()}
+                          <span className="text-muted-foreground text-center truncate">{trade.amount}</span>
+                          <span className="text-muted-foreground text-right text-xs truncate">
+                            {trade.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
                       ))}
@@ -579,53 +583,58 @@ export default function LiveTrading() {
         transition={{ delay: 0.4 }}
       >
         <Card className="bg-gradient-card border-border/50">
-          <CardHeader>
-            <CardTitle>Your Trading History</CardTitle>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-lg sm:text-xl">Your Trading History</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             {trades.length === 0 ? (
-              <div className="text-center py-12">
-                <Activity className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Trades Yet</h3>
-                <p className="text-muted-foreground">Start trading to see your history here.</p>
+              <div className="text-center py-8 sm:py-12 px-4">
+                <Activity className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-semibold mb-2">No Trades Yet</h3>
+                <p className="text-sm sm:text-base text-muted-foreground">Start trading to see your history here.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-[600px]">
                   <thead className="bg-muted/30">
                     <tr>
-                      <th className="p-4 text-left text-sm font-medium text-muted-foreground">Time</th>
-                      <th className="p-4 text-left text-sm font-medium text-muted-foreground">Coin</th>
-                      <th className="p-4 text-center text-sm font-medium text-muted-foreground">Type</th>
-                      <th className="p-4 text-right text-sm font-medium text-muted-foreground">Amount</th>
-                      <th className="p-4 text-right text-sm font-medium text-muted-foreground">Price</th>
-                      <th className="p-4 text-right text-sm font-medium text-muted-foreground">Total</th>
+                      <th className="p-2 sm:p-4 text-left text-xs sm:text-sm font-medium text-muted-foreground">Time</th>
+                      <th className="p-2 sm:p-4 text-left text-xs sm:text-sm font-medium text-muted-foreground">Coin</th>
+                      <th className="p-2 sm:p-4 text-center text-xs sm:text-sm font-medium text-muted-foreground">Type</th>
+                      <th className="p-2 sm:p-4 text-right text-xs sm:text-sm font-medium text-muted-foreground">Amount</th>
+                      <th className="p-2 sm:p-4 text-right text-xs sm:text-sm font-medium text-muted-foreground">Price</th>
+                      <th className="p-2 sm:p-4 text-right text-xs sm:text-sm font-medium text-muted-foreground">Total</th>
                     </tr>
                   </thead>
                   <tbody>
                     {trades.map((trade, index) => (
                       <tr key={trade.id} className="border-b border-border/30">
-                        <td className="p-4 text-sm text-muted-foreground">
-                          {new Date(trade.created_at).toLocaleString()}
+                        <td className="p-2 sm:p-4 text-xs sm:text-sm text-muted-foreground">
+                          <div className="hidden sm:block">
+                            {new Date(trade.created_at).toLocaleString()}
+                          </div>
+                          <div className="sm:hidden">
+                            {new Date(trade.created_at).toLocaleDateString()}
+                          </div>
                         </td>
-                        <td className="p-4 text-sm font-medium">
+                        <td className="p-2 sm:p-4 text-xs sm:text-sm font-medium">
                           {trade.coin_id.toUpperCase()}
                         </td>
-                        <td className="p-4 text-center">
+                        <td className="p-2 sm:p-4 text-center">
                           <Badge 
                             variant={trade.type === 'buy' ? 'default' : 'secondary'}
-                            className={trade.type === 'buy' ? 'bg-crypto-gain text-white' : 'bg-crypto-loss text-white'}
+                            className={`text-xs ${trade.type === 'buy' ? 'bg-crypto-gain text-white' : 'bg-crypto-loss text-white'}`}
                           >
                             {trade.type.toUpperCase()}
                           </Badge>
                         </td>
-                        <td className="p-4 text-right text-sm">
-                          {trade.amount.toFixed(6)}
+                        <td className="p-2 sm:p-4 text-right text-xs sm:text-sm">
+                          {trade.amount.toFixed(4)}
                         </td>
-                        <td className="p-4 text-right text-sm">
+                        <td className="p-2 sm:p-4 text-right text-xs sm:text-sm">
                           ${trade.price.toLocaleString()}
                         </td>
-                        <td className="p-4 text-right text-sm font-medium">
+                        <td className="p-2 sm:p-4 text-right text-xs sm:text-sm font-medium">
                           ${(trade.amount * trade.price).toLocaleString()}
                         </td>
                       </tr>

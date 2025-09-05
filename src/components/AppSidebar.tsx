@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import {
   BarChart3,
   TrendingUp,
@@ -38,12 +39,40 @@ const quickActions = [
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpenMobile } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
+  const [isMobile, setIsMobile] = useState(false);
 
   const isActive = (path: string) => currentPath === path;
   const collapsed = state === "collapsed";
+
+  // Check if mobile and close sidebar on route change
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Auto-close mobile sidebar on navigation
+  useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [currentPath, isMobile, setOpenMobile]);
+
+  const handleNavClick = () => {
+    // Additional mobile close trigger for immediate response
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <Sidebar
@@ -92,6 +121,7 @@ export function AppSidebar() {
                       <NavLink 
                         to={item.url} 
                         end 
+                        onClick={handleNavClick}
                         className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200"
                       >
                         <item.icon className="w-5 h-5" />
@@ -127,6 +157,7 @@ export function AppSidebar() {
                       >
                         <NavLink 
                           to={item.url} 
+                          onClick={handleNavClick}
                           className="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200"
                         >
                           <item.icon className="w-4 h-4 text-muted-foreground" />

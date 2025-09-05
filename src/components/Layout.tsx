@@ -86,12 +86,12 @@ export function Layout({ children }: LayoutProps) {
             {/* Header */}
             <motion.header
               {...motionSettings}
-              className="h-14 sm:h-16 flex items-center justify-between px-3 sm:px-6 border-b border-border/50 bg-card/30 backdrop-blur-sm sticky top-0 z-50"
+              className="h-14 sm:h-16 flex items-center justify-between px-3 sm:px-6 border-b border-border/50 bg-card/30 backdrop-blur-sm sticky top-0 z-50 pt-safe-top"
               role="banner"
             >
               <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                 <SidebarTrigger 
-                  className="hover:bg-secondary/50 transition-colors duration-200 focus:ring-accessible min-h-[44px] min-w-[44px] shrink-0"
+                  className="hover:bg-secondary/50 transition-colors duration-200 focus:ring-accessible min-h-[44px] min-w-[44px] shrink-0 touch-target"
                   aria-label={ARIA_LABELS.sidebarToggle}
                 />
                 <div className="flex-1 max-w-sm sm:max-w-md min-w-0">
@@ -105,7 +105,7 @@ export function Layout({ children }: LayoutProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="relative hover:bg-secondary/50 transition-colors duration-200 focus:ring-accessible min-h-[44px] min-w-[44px]"
+                    className="relative hover:bg-secondary/50 transition-colors duration-200 focus:ring-accessible min-h-[44px] min-w-[44px] touch-target"
                     aria-label={`Notifications (${notificationCount} unread)`}
                     aria-describedby="notification-count"
                   >
@@ -127,7 +127,7 @@ export function Layout({ children }: LayoutProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="hover:bg-secondary/50 transition-colors duration-200 focus:ring-accessible min-h-[44px] min-w-[44px]"
+                      className="hover:bg-secondary/50 transition-colors duration-200 focus:ring-accessible min-h-[44px] min-w-[44px] touch-target"
                       aria-label="User menu"
                     >
                       <User className="w-5 h-5" aria-hidden="true" />
@@ -173,7 +173,7 @@ export function Layout({ children }: LayoutProps) {
                   { initial: {}, animate: {}, transition: { duration: 0 } } :
                   { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.4, delay: 0.1 } }
                 )}
-                className="p-3 sm:p-4 lg:p-6 pb-safe"
+                className="p-3 sm:p-4 lg:p-6 pb-safe pl-safe-left pr-safe-right"
               >
                 {children}
               </motion.div>
