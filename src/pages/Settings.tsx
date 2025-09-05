@@ -96,18 +96,18 @@ export default function Settings() {
   }
 
   return (
-    <div className="space-y-8 max-w-4xl">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 max-w-4xl">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Settings
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
             Manage your account and app preferences
           </p>
         </div>
@@ -126,15 +126,15 @@ export default function Settings() {
               Account Information
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-4 sm:p-6 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
               <Input
                 id="email"
                 type="email"
                 value={user.email || ''}
                 disabled
-                className="bg-background/50 border-border/50"
+                className="bg-background/50 border-border/50 text-sm sm:text-base"
               />
               <p className="text-xs text-muted-foreground">
                 Email cannot be changed. Contact support if you need to update it.
@@ -142,12 +142,12 @@ export default function Settings() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="userId">User ID</Label>
+              <Label htmlFor="userId" className="text-sm sm:text-base">User ID</Label>
               <Input
                 id="userId"
                 value={user.id}
                 disabled
-                className="bg-background/50 border-border/50 font-mono text-xs"
+                className="bg-background/50 border-border/50 font-mono text-xs sm:text-sm"
               />
             </div>
           </CardContent>
@@ -167,15 +167,15 @@ export default function Settings() {
               App Preferences
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <CardContent className="p-4 sm:p-6 space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               <div className="space-y-2">
-                <Label htmlFor="theme">Theme</Label>
+                <Label htmlFor="theme" className="text-sm sm:text-base">Theme</Label>
                 <Select
                   value={preferences.theme}
                   onValueChange={(value) => setPreferences(prev => ({ ...prev, theme: value }))}
                 >
-                  <SelectTrigger className="bg-background border-border/50">
+                  <SelectTrigger className="bg-background border-border/50 touch-manipulation">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -186,12 +186,12 @@ export default function Settings() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="currency">Default Currency</Label>
+                <Label htmlFor="currency" className="text-sm sm:text-base">Default Currency</Label>
                 <Select
                   value={preferences.currency}
                   onValueChange={(value) => setPreferences(prev => ({ ...prev, currency: value }))}
                 >
-                  <SelectTrigger className="bg-background border-border/50">
+                  <SelectTrigger className="bg-background border-border/50 touch-manipulation">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -208,7 +208,7 @@ export default function Settings() {
               <Button
                 onClick={handleSavePreferences}
                 disabled={isSaving}
-                className="bg-gradient-primary hover:shadow-glow transition-all duration-300"
+                className="bg-gradient-primary hover:shadow-glow transition-all duration-300 touch-manipulation w-full sm:w-auto"
               >
                 {isSaving ? (
                   <div className="flex items-center gap-2">
@@ -240,35 +240,35 @@ export default function Settings() {
               Notifications
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-medium">Price Alerts</h4>
-                <p className="text-sm text-muted-foreground">
+          <CardContent className="p-4 sm:p-6 space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-sm sm:text-base">Price Alerts</h4>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Get notified when your assets reach target prices
                 </p>
               </div>
-              <Switch defaultChecked />
+              <Switch defaultChecked className="shrink-0" />
             </div>
             
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-medium">Portfolio Updates</h4>
-                <p className="text-sm text-muted-foreground">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-sm sm:text-base">Portfolio Updates</h4>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Daily summary of your portfolio performance
                 </p>
               </div>
-              <Switch defaultChecked />
+              <Switch defaultChecked className="shrink-0" />
             </div>
             
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-medium">Market News</h4>
-                <p className="text-sm text-muted-foreground">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-sm sm:text-base">Market News</h4>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Important market updates and news
                 </p>
               </div>
-              <Switch />
+              <Switch className="shrink-0" />
             </div>
           </CardContent>
         </Card>
@@ -284,18 +284,18 @@ export default function Settings() {
           <CardHeader>
             <CardTitle className="text-destructive">Danger Zone</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="font-medium">Sign Out</h4>
-                <p className="text-sm text-muted-foreground">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="min-w-0">
+                <h4 className="font-medium text-sm sm:text-base">Sign Out</h4>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Sign out of your account on this device
                 </p>
               </div>
               <Button
                 variant="destructive"
                 onClick={handleSignOut}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 touch-manipulation w-full sm:w-auto shrink-0"
               >
                 <LogOut className="w-4 h-4" />
                 Sign Out

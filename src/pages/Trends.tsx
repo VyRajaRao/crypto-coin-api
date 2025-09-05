@@ -59,41 +59,41 @@ export default function Trends() {
 
   if (isLoading) {
     return (
-      <div className="space-y-8">
-        <div className="text-center py-12">
+      <div className="space-y-4 sm:space-y-6 lg:space-y-8">
+        <div className="text-center py-8 sm:py-12">
           <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading market trends...</p>
+          <p className="text-muted-foreground text-sm sm:text-base">Loading market trends...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             Market Trends
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">
             Discover trending coins and market movers
           </p>
         </div>
         
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-muted-foreground" />
+        <div className="flex items-center gap-2 shrink-0">
+          <Filter className="w-4 h-4 text-muted-foreground hidden sm:block" />
           {timeframes.map((timeframe) => (
             <Button
               key={timeframe.value}
               variant={selectedTimeframe === timeframe.value ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedTimeframe(timeframe.value)}
-              className={selectedTimeframe === timeframe.value ? "bg-gradient-primary" : ""}
+              className={`touch-manipulation ${selectedTimeframe === timeframe.value ? "bg-gradient-primary" : ""}`}
             >
               {timeframe.label}
             </Button>
@@ -121,7 +121,7 @@ export default function Trends() {
                 <span>Top 10 by Market Cap</span>
                 <Badge className="bg-primary text-primary-foreground">Interactive Charts</Badge>
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
                 {coins.map((coin, index) => (
                   <motion.div
                     key={coin.id}
@@ -129,15 +129,15 @@ export default function Trends() {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.05 }}
                     onClick={() => setSelectedCoin(coin)}
-                    className="p-4 rounded-lg bg-background/50 border border-primary/20 hover:border-primary/50 transition-all cursor-pointer hover:scale-105"
+                    className="p-3 sm:p-4 rounded-lg bg-background/50 border border-primary/20 hover:border-primary/50 transition-all cursor-pointer hover:scale-105 touch-manipulation"
                   >
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="default" className="text-xs bg-primary">
-                        Top #{index + 1}
+                      <Badge variant="default" className="text-xs bg-primary shrink-0">
+                        #{index + 1}
                       </Badge>
-                      <img src={coin.image} alt={coin.name} className="w-6 h-6" />
+                      <img src={coin.image} alt={coin.name} className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <h4 className="font-medium text-sm">{coin.name}</h4>
+                    <h4 className="font-medium text-xs sm:text-sm truncate">{coin.name}</h4>
                     <p className="text-xs text-muted-foreground uppercase">{coin.symbol}</p>
                     <p className="text-xs font-medium mt-1">${coin.current_price.toLocaleString()}</p>
                     <div className={`text-xs flex items-center gap-1 mt-1 ${
@@ -157,7 +157,7 @@ export default function Trends() {
                 <span>Trending Coins</span>
                 <Badge variant="outline">Details Only</Badge>
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
                 {trending.slice(0, 10).map((coin, index) => {
                   const isTop10 = coins.some(topCoin => topCoin.id === coin.id);
                   return (
@@ -183,7 +183,7 @@ export default function Trends() {
                           }
                         }
                       }}
-                      className={`p-4 rounded-lg bg-background/50 border transition-all cursor-pointer hover:scale-105 ${
+                      className={`p-3 sm:p-4 rounded-lg bg-background/50 border transition-all cursor-pointer hover:scale-105 touch-manipulation ${
                         isTop10 
                           ? 'border-primary/20 hover:border-primary/50' 
                           : 'border-border/30 hover:border-secondary/50'
@@ -191,15 +191,15 @@ export default function Trends() {
                     >
                       <div className="flex items-center gap-2 mb-2">
                         {isTop10 ? (
-                          <Badge className="text-xs bg-primary">Top 10</Badge>
+                          <Badge className="text-xs bg-primary shrink-0">Top 10</Badge>
                         ) : (
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs shrink-0">
                             #{index + 1}
                           </Badge>
                         )}
-                        <img src={coin.small} alt={coin.name} className="w-6 h-6" />
+                        <img src={coin.small} alt={coin.name} className="w-5 h-5 sm:w-6 sm:h-6" />
                       </div>
-                      <h4 className="font-medium text-sm">{coin.name}</h4>
+                      <h4 className="font-medium text-xs sm:text-sm truncate">{coin.name}</h4>
                       <p className="text-xs text-muted-foreground uppercase">{coin.symbol}</p>
                     </motion.div>
                   );
@@ -226,7 +226,7 @@ export default function Trends() {
       )}
 
       {/* Top Gainers & Losers */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Top Gainers */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -248,16 +248,16 @@ export default function Trends() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 + index * 0.05 }}
-                    className="flex items-center justify-between p-3 rounded-lg bg-background/30 hover:bg-background/50 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg bg-background/30 hover:bg-background/50 transition-colors touch-manipulation"
                   >
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline" className="text-xs min-w-8">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                      <Badge variant="outline" className="text-xs min-w-6 sm:min-w-8 shrink-0">
                         #{index + 1}
                       </Badge>
-                      <img src={coin.image} alt={coin.name} className="w-8 h-8" />
-                      <div>
-                        <p className="font-medium">{coin.name}</p>
-                        <p className="text-sm text-muted-foreground">${coin.current_price.toLocaleString()}</p>
+                      <img src={coin.image} alt={coin.name} className="w-6 h-6 sm:w-8 sm:h-8 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm sm:text-base truncate">{coin.name}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">${coin.current_price.toLocaleString()}</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -293,16 +293,16 @@ export default function Trends() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 + index * 0.05 }}
-                    className="flex items-center justify-between p-3 rounded-lg bg-background/30 hover:bg-background/50 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg bg-background/30 hover:bg-background/50 transition-colors touch-manipulation"
                   >
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline" className="text-xs min-w-8">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                      <Badge variant="outline" className="text-xs min-w-6 sm:min-w-8 shrink-0">
                         #{index + 1}
                       </Badge>
-                      <img src={coin.image} alt={coin.name} className="w-8 h-8" />
-                      <div>
-                        <p className="font-medium">{coin.name}</p>
-                        <p className="text-sm text-muted-foreground">${coin.current_price.toLocaleString()}</p>
+                      <img src={coin.image} alt={coin.name} className="w-6 h-6 sm:w-8 sm:h-8 shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm sm:text-base truncate">{coin.name}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">${coin.current_price.toLocaleString()}</p>
                       </div>
                     </div>
                     <div className="text-right">

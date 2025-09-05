@@ -10,14 +10,69 @@ export default {
 	],
 	prefix: "",
 	theme: {
+		screens: {
+			// Mobile-first responsive breakpoints
+			'xs': '375px',
+			'sm': '640px',
+			'md': '768px',
+			'lg': '1024px',
+			'xl': '1280px',
+			'2xl': '1536px',
+			// Touch-friendly breakpoints
+			'touch': { 'raw': '(hover: none) and (pointer: coarse)' },
+			'mouse': { 'raw': '(hover: hover) and (pointer: fine)' },
+			// Orientation breakpoints
+			'portrait': { 'raw': '(orientation: portrait)' },
+			'landscape': { 'raw': '(orientation: landscape)' }
+		},
 		container: {
 			center: true,
-			padding: '2rem',
+			padding: {
+				DEFAULT: '1rem',
+				xs: '1rem',
+				sm: '1.5rem',
+				md: '2rem',
+				lg: '2rem',
+				xl: '2rem'
+			},
 			screens: {
+				xs: '375px',
+				sm: '640px',
+				md: '768px',
+				lg: '1024px',
+				xl: '1280px',
 				'2xl': '1400px'
 			}
 		},
 		extend: {
+			// Mobile-first spacing system
+			spacing: {
+				'safe': 'env(safe-area-inset-bottom)',
+				'safe-top': 'env(safe-area-inset-top)',
+				'safe-left': 'env(safe-area-inset-left)',
+				'safe-right': 'env(safe-area-inset-right)',
+				// Touch-friendly sizes (minimum 44px as per Apple/Google guidelines)
+				'touch-sm': '40px',
+				'touch': '44px',
+				'touch-lg': '48px',
+				'touch-xl': '56px',
+				// Mobile-specific spacing
+				'mobile-xs': '0.25rem',
+				'mobile-sm': '0.5rem',
+				'mobile': '0.75rem',
+				'mobile-lg': '1rem',
+				'mobile-xl': '1.5rem'
+			},
+			// Font sizes optimized for mobile
+			fontSize: {
+				'mobile-xs': ['0.75rem', { lineHeight: '1rem' }],
+				'mobile-sm': ['0.875rem', { lineHeight: '1.25rem' }],
+				'mobile': ['1rem', { lineHeight: '1.5rem' }],
+				'mobile-lg': ['1.125rem', { lineHeight: '1.75rem' }],
+				'mobile-xl': ['1.25rem', { lineHeight: '1.75rem' }],
+				'mobile-2xl': ['1.5rem', { lineHeight: '2rem' }],
+				'mobile-3xl': ['1.875rem', { lineHeight: '2.25rem' }]
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -157,6 +212,40 @@ export default {
 				'slide-in': 'slide-in 0.3s ease-out',
 				'fade-in': 'fade-in 0.3s ease-out',
 				'scale-in': 'scale-in 0.2s ease-out'
+			},
+			// Mobile-specific utilities
+			utilities: {
+				// Touch manipulation
+				'.touch-manipulation': {
+					'touch-action': 'manipulation'
+				},
+				// Mobile-safe scrolling
+				'.scroll-mobile': {
+					'-webkit-overflow-scrolling': 'touch',
+					'overscroll-behavior': 'contain'
+				},
+				// Accessibility focus ring
+				'.focus-accessible': {
+					'&:focus-visible': {
+						'outline': '2px solid hsl(var(--ring))',
+						'outline-offset': '2px'
+					}
+				},
+				// Skip link for screen readers
+				'.skip-link': {
+					'position': 'absolute',
+					'top': '-100px',
+					'left': '16px',
+					'background': 'hsl(var(--primary))',
+					'color': 'hsl(var(--primary-foreground))',
+					'padding': '8px 16px',
+					'text-decoration': 'none',
+					'border-radius': '4px',
+					'z-index': '9999',
+					'&:focus': {
+						'top': '16px'
+					}
+				}
 			}
 		}
 	},

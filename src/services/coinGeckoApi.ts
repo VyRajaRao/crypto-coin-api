@@ -121,7 +121,63 @@ export interface CoinDetails {
   }
 }
 
+// Top 10 coins cache for quick lookup
+let top10CoinsCache: string[] = []
+let top10LastFetch = 0
+const TOP10_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
 class CoinGeckoAPI {
+  // Check if a coin is in the top 10 by market cap
+  async isTop10Coin(coinId: string): Promise<boolean> {
+    const now = Date.now()
+    
+    // Refresh top 10 cache if expired
+    if (!top10CoinsCache.length || now - top10LastFetch > TOP10_CACHE_TTL) {
+      try {
+        const top10 = await this.getTop10Coins()
+        top10CoinsCache = top10.map(coin => coin.id)
+        top10LastFetch = now
+        console.log('[Top10 Cache] Updated:', top10CoinsCache)
+      } catch (error) {
+        console.warn('[Top10 Cache] Failed to update:', error)
+        // Use stale cache if available
+      }
+    }
+    
+    return top10CoinsCache.includes(coinId)
+  }
+  
+  // Get current top 10 coins list
+  getTop10CoinIds(): string[] {
+    return [...top10CoinsCache]
+  }
+  
+  // Get exactly top 10 coins (separate method for clarity)
+  async getTop10Coins(currency: string = 'usd'): Promise<CoinData[]> {
+    const cacheKey = `top-10-coins-${currency}`
+    
+    if (apiCache.has(cacheKey)) {
+      return apiCache.get(cacheKey)
+    }
+    
+    try {
+      const response = await rateLimitedRequest(
+        `${BASE_URL}/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=10&page=1&sparkline=true&price_change_percentage=1h,24h,7d`
+      )
+      
+      // Cache for 2 minutes
+      apiCache.set(cacheKey, response.data, 120000)
+      
+      // Update top10 cache
+      top10CoinsCache = response.data.map((coin: CoinData) => coin.id)
+      top10LastFetch = Date.now()
+      
+      return response.data
+    } catch (error) {
+      this.handleApiError(error, 'getTop10Coins')
+    }
+  }
+
   private handleApiError(error: unknown, context: string): never {
     console.error(`CoinGecko API Error - ${context}:`, error);
     
@@ -322,6 +378,111 @@ class CoinGeckoAPI {
       return response.data
     } catch (error) {
       this.handleApiError(error, 'getGlobalMarketData')
+    }
+  }
+
+  // Market Scanner Methods
+  async getTopGainers(limit: number = 20, timeframe: '24h' | '7d' = '24h'): Promise<CoinData[]> {
+    try {
+      const response = await rateLimitedRequest(
+        `${BASE_URL}/coins/markets?vs_currency=usd&order=percent_change_${timeframe}_desc&per_page=${limit}&page=1&sparkline=true&price_change_percentage=${timeframe}`
+      )
+      return response.data.filter((coin: CoinData) => coin.price_change_percentage_24h > 0)
+    } catch (error) {
+      this.handleApiError(error, 'getTopGainers')
+    }
+  }
+
+  async getTopLosers(limit: number = 20, timeframe: '24h' | '7d' = '24h'): Promise<CoinData[]> {
+    try {
+      const response = await rateLimitedRequest(
+        `${BASE_URL}/coins/markets?vs_currency=usd&order=percent_change_${timeframe}_asc&per_page=${limit}&page=1&sparkline=true&price_change_percentage=${timeframe}`
+      )
+      return response.data.filter((coin: CoinData) => coin.price_change_percentage_24h < 0)
+    } catch (error) {
+      this.handleApiError(error, 'getTopLosers')
+    }
+  }
+
+  async getHighVolumeCoins(limit: number = 50): Promise<CoinData[]> {
+    try {
+      const response = await rateLimitedRequest(
+        `${BASE_URL}/coins/markets?vs_currency=usd&order=volume_desc&per_page=${limit}&page=1&sparkline=true&price_change_percentage=24h`
+      )
+      return response.data
+    } catch (error) {
+      this.handleApiError(error, 'getHighVolumeCoins')
+    }
+  }
+
+  // Advanced filtering for market scanner
+  async getFilteredCoins(filters: {
+    priceChangeMin?: number
+    priceChangeMax?: number
+    volumeChangeMin?: number
+    marketCapMin?: number
+    marketCapMax?: number
+    limit?: number
+  }): Promise<CoinData[]> {
+    try {
+      const { limit = 100 } = filters
+      const response = await rateLimitedRequest(
+        `${BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${limit}&page=1&sparkline=true&price_change_percentage=24h,7d`
+      )
+      
+      return response.data.filter((coin: CoinData) => {
+        if (filters.priceChangeMin !== undefined && coin.price_change_percentage_24h < filters.priceChangeMin) return false
+        if (filters.priceChangeMax !== undefined && coin.price_change_percentage_24h > filters.priceChangeMax) return false
+        if (filters.marketCapMin !== undefined && coin.market_cap < filters.marketCapMin) return false
+        if (filters.marketCapMax !== undefined && coin.market_cap > filters.marketCapMax) return false
+        return true
+      })
+    } catch (error) {
+      this.handleApiError(error, 'getFilteredCoins')
+    }
+  }
+
+  // Get coin categories
+  async getCoinCategories(): Promise<Array<{ category_id: string; name: string }>> {
+    try {
+      const response = await rateLimitedRequest(`${BASE_URL}/coins/categories/list`)
+      return response.data
+    } catch (error) {
+      this.handleApiError(error, 'getCoinCategories')
+    }
+  }
+
+  // Enhanced search with price info
+  async searchCoinsWithPrices(query: string): Promise<{
+    coins: Array<{
+      id: string
+      name: string
+      symbol: string
+      market_cap_rank: number
+      thumb: string
+      current_price?: number
+      price_change_percentage_24h?: number
+    }>
+  }> {
+    try {
+      const [searchResult, marketData] = await Promise.all([
+        rateLimitedRequest(`${BASE_URL}/search?query=${encodeURIComponent(query)}`),
+        this.getTopCoins(250) // Get more coins for price lookup
+      ])
+      
+      // Enhance search results with price data
+      const enhancedCoins = searchResult.data.coins.map((coin: any) => {
+        const priceData = marketData.find((market: CoinData) => market.id === coin.id)
+        return {
+          ...coin,
+          current_price: priceData?.current_price,
+          price_change_percentage_24h: priceData?.price_change_percentage_24h
+        }
+      })
+      
+      return { coins: enhancedCoins }
+    } catch (error) {
+      this.handleApiError(error, 'searchCoinsWithPrices')
     }
   }
 }

@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Filter, Download, TrendingUp, TrendingDown, Activity, Search } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Filter, Download, TrendingUp, TrendingDown, Activity, Search, Zap, Volume2, Target } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { coinGeckoApi, type CoinData } from '@/services/coinGeckoApi';
+import { Slider } from '@/components/ui/slider';
+import { useMarketScanner, useTop10Coins } from '@/hooks/useCryptoData';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { Sparkline } from '@/components/AdvancedChart';
+import { type CoinData, coinGeckoApi } from '@/services/coinGeckoApi';
 import { toast } from 'sonner';
 
 interface FilterConfig {
@@ -19,24 +24,36 @@ interface FilterConfig {
   timeframe: '1h' | '24h' | '7d';
 }
 
-const PRESETS = {
-  'top-gainers': {
+const PRESETS = [
+  {
+    id: 'top-gainers',
     name: 'Top Gainers 24h',
-    config: { priceChangeMin: '5', timeframe: '24h' as const }
+    description: 'Coins with highest 24h gains',
+    icon: TrendingUp,
+    color: 'text-crypto-gain'
   },
-  'top-losers': {
-    name: 'Top Losers 24h', 
-    config: { priceChangeMax: '-5', timeframe: '24h' as const }
+  {
+    id: 'top-losers',
+    name: 'Top Losers 24h',
+    description: 'Coins with biggest 24h drops',
+    icon: TrendingDown,
+    color: 'text-crypto-loss'
   },
-  'volume-surge': {
+  {
+    id: 'high-volume',
     name: 'High Volume Surge',
-    config: { volumeChangeMin: '50', timeframe: '24h' as const }
+    description: 'Coins with unusually high volume',
+    icon: Volume2,
+    color: 'text-blue-400'
   },
-  'large-cap': {
-    name: 'Large Cap Coins',
-    config: { marketCapMin: '1000000000', timeframe: '24h' as const }
+  {
+    id: 'small-caps',
+    name: 'Small Cap Gems',
+    description: 'Low market cap opportunities',
+    icon: Target,
+    color: 'text-yellow-400'
   }
-};
+];
 
 export default function MarketScanner() {
   const [coins, setCoins] = useState<CoinData[]>([]);
@@ -105,19 +122,37 @@ export default function MarketScanner() {
     setFilteredCoins(filtered);
   }, [coins, filters, searchQuery]);
 
-  const handlePreset = (presetKey: keyof typeof PRESETS) => {
-    const preset = PRESETS[presetKey];
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      ...preset.config,
-      // Reset other filters
-      priceChangeMin: preset.config.priceChangeMin || '',
-      priceChangeMax: preset.config.priceChangeMax || '',
-      volumeChangeMin: preset.config.volumeChangeMin || '',
-      marketCapMin: preset.config.marketCapMin || '',
+  const handlePreset = (presetId: string) => {
+    const preset = PRESETS.find(p => p.id === presetId);
+    if (!preset) return;
+
+    // Apply preset-specific filters
+    let newFilters = {
+      priceChangeMin: '',
+      priceChangeMax: '',
+      volumeChangeMin: '',
+      marketCapMin: '',
       marketCapMax: '',
-      category: ''
-    }));
+      category: '',
+      timeframe: '24h' as const
+    };
+
+    switch (preset.id) {
+      case 'top-gainers':
+        newFilters.priceChangeMin = '5';
+        break;
+      case 'top-losers':
+        newFilters.priceChangeMax = '-5';
+        break;
+      case 'high-volume':
+        newFilters.volumeChangeMin = '50';
+        break;
+      case 'small-caps':
+        newFilters.marketCapMax = '1000000000';
+        break;
+    }
+
+    setFilters(newFilters);
     toast.success(`Applied ${preset.name} filter`);
   };
 
@@ -211,20 +246,28 @@ export default function MarketScanner() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-3">
-              {Object.entries(PRESETS).map(([key, preset]) => (
-                <Button
-                  key={key}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePreset(key as keyof typeof PRESETS)}
-                  className="hover:bg-primary/10"
-                >
-                  {preset.name}
-                </Button>
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {PRESETS.map((preset) => {
+                const IconComponent = preset.icon;
+                return (
+                  <Button
+                    key={preset.id}
+                    variant="outline"
+                    onClick={() => handlePreset(preset.id)}
+                    className="flex items-center justify-start gap-3 h-auto p-4 hover:bg-primary/10 transition-colors"
+                  >
+                    <IconComponent className={`w-5 h-5 ${preset.color}`} />
+                    <div className="text-left">
+                      <div className="font-medium">{preset.name}</div>
+                      <div className="text-xs text-muted-foreground">{preset.description}</div>
+                    </div>
+                  </Button>
+                );
+              })}
+            </div>
+            <div className="mt-4 flex justify-center">
               <Button variant="ghost" size="sm" onClick={resetFilters} className="text-muted-foreground">
-                Reset All
+                Reset All Filters
               </Button>
             </div>
           </CardContent>

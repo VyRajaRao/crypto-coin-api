@@ -8,7 +8,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { ARIA_LABELS, prefersReducedMotion } from "../utils/accessibility";
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
+import { useAlerts } from '@/hooks/useSupabase';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,9 +17,12 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { user, loading, signOut } = useAuth();
+  const { alerts } = useAlerts();
   const [reducedMotion, setReducedMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(3);
+  
+  // Get real notification count from alerts
+  const notificationCount = alerts?.filter(alert => !alert.read).length || 0;
 
   useEffect(() => {
     setReducedMotion(prefersReducedMotion());
@@ -82,29 +86,30 @@ export function Layout({ children }: LayoutProps) {
             {/* Header */}
             <motion.header
               {...motionSettings}
-              className="h-16 flex items-center justify-between px-4 sm:px-6 border-b border-border/50 bg-card/30 backdrop-blur-sm"
+              className="h-14 sm:h-16 flex items-center justify-between px-3 sm:px-6 border-b border-border/50 bg-card/30 backdrop-blur-sm sticky top-0 z-50"
               role="banner"
             >
-              <div className="flex items-center gap-2 sm:gap-4 flex-1">
+              <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
                 <SidebarTrigger 
-                  className="hover:bg-secondary/50 transition-colors duration-200 focus:ring-accessible min-h-[44px] min-w-[44px]"
+                  className="hover:bg-secondary/50 transition-colors duration-200 focus:ring-accessible min-h-[44px] min-w-[44px] shrink-0"
                   aria-label={ARIA_LABELS.sidebarToggle}
                 />
-                <div className="flex-1 max-w-md">
+                <div className="flex-1 max-w-sm sm:max-w-md min-w-0">
                   <SearchBar />
                 </div>
               </div>
 
               <div className="flex items-center gap-1 sm:gap-3">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="relative hover:bg-secondary/50 transition-colors duration-200 focus:ring-accessible min-h-[44px] min-w-[44px]"
-                  aria-label={`Notifications (${notificationCount} unread)`}
-                  aria-describedby="notification-count"
-                >
-                  <Bell className="w-5 h-5" aria-hidden="true" />
-                  {notificationCount > 0 && (
+                {/* Notification bell - only show when there are notifications */}
+                {notificationCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative hover:bg-secondary/50 transition-colors duration-200 focus:ring-accessible min-h-[44px] min-w-[44px]"
+                    aria-label={`Notifications (${notificationCount} unread)`}
+                    aria-describedby="notification-count"
+                  >
+                    <Bell className="w-5 h-5" aria-hidden="true" />
                     <span 
                       className="absolute -top-1 -right-1 w-5 h-5 bg-destructive rounded-full flex items-center justify-center"
                       id="notification-count"
@@ -114,8 +119,8 @@ export function Layout({ children }: LayoutProps) {
                         {notificationCount > 99 ? '99+' : notificationCount}
                       </span>
                     </span>
-                  )}
-                </Button>
+                  </Button>
+                )}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -159,7 +164,7 @@ export function Layout({ children }: LayoutProps) {
             {/* Main Content */}
             <main 
               id="main-content"
-              className="flex-1 overflow-auto scrollbar-thin"
+              className="flex-1 overflow-auto scrollbar-thin overscroll-contain"
               role="main"
               tabIndex={-1}
             >
@@ -168,7 +173,7 @@ export function Layout({ children }: LayoutProps) {
                   { initial: {}, animate: {}, transition: { duration: 0 } } :
                   { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.4, delay: 0.1 } }
                 )}
-                className="p-4 sm:p-6"
+                className="p-3 sm:p-4 lg:p-6 pb-safe"
               >
                 {children}
               </motion.div>
